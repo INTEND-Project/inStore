@@ -1,3 +1,7 @@
+pip=22.0.2
+
+langchain
 langgraph 
 langsmith 
 langchain_anthropic
+pydantic

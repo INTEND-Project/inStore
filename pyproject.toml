@@ -1,0 +1,16 @@
+[project]
+name = "instore"
+requires-python = ">= 3.10"
+readme = "README.md"
+
+[tool.autopep8]
+max_line_length = 100
+in-place = true
+
+[tool.isort]
+line_length = 100
+include_trailing_comma = true
+
+[tool.pyright]
+reportMissingTypeArgument = true
+strictListInference = true

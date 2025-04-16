@@ -1,0 +1,3 @@
+[tools.pyright]
+reportMissingTypeArgument = true
+strictListInference = true

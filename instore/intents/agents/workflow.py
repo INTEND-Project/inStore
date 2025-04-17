@@ -5,8 +5,8 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
-from agents.chatbot import Chatbot
-from agents.tools import DataPlacementOptimizerTool
+from .chatbot import Chatbot
+from .tools import DataPlacementOptimizerTool
 
 
 class State(TypedDict):
@@ -44,8 +44,6 @@ class Workflow:
         if len(ai_message.tool_calls) > 0:
             return self.tool_node
         return END
-
-
 
     def run(self, message: str) -> dict[str, Any] | Any:
         msg = HumanMessage(content=message)

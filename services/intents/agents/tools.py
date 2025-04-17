@@ -1,7 +1,9 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+
+from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain_core.tools import ArgsSchema, BaseTool
-from langchain_core.callbacks import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
+from pydantic import BaseModel, Field
+
 
 class DataPlacementOptimizerInput(BaseModel):
     action: str = Field(
@@ -22,6 +24,4 @@ class DataPlacementOptimizerTool(BaseTool):
             run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> str:
         # TODO: Use real data placement optimizer service
-        return f"[DataPlacementOptimizer] {content_tag} videos should be moved to hot storage on March 16th 2025"
-
-
+        return f"[DataPlacementOptimizer] {content_tag} videos are being moved to hot storage"

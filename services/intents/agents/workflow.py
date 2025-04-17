@@ -1,12 +1,12 @@
-from langchain_core.messages import AnyMessage, HumanMessage
-from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, MessagesState, START, END
-from typing import List, Annotated, TypedDict, Any
+from typing import Annotated, Any, TypedDict
 
+from langchain_core.messages import HumanMessage
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
-from tools import DataPlacementOptimizerTool
-from chatbot import Chatbot
+from agents.chatbot import Chatbot
+from agents.tools import DataPlacementOptimizerTool
 
 
 class State(TypedDict):
@@ -20,18 +20,18 @@ class Workflow:
         self.data_placement_tool = data_placement_tool
         self.chatbot = chatbot
 
-        self.AGENT_NODE = "agent" 
-        self.TOOL_NODE = "tools"
+        self.agent_node = "agent"
+        self.tool_node = "tools"
 
         tools = ToolNode([self.data_placement_tool])
 
         workflow = StateGraph(State)
-        workflow.add_node(self.AGENT_NODE, self.__call_chatbot)
-        workflow.add_node(self.TOOL_NODE, tools)
-        workflow.add_edge(START, self.AGENT_NODE)
-        workflow.add_conditional_edges(self.AGENT_NODE, self.__route_tools)
-        workflow.add_edge(self.TOOL_NODE, self.AGENT_NODE)
-        workflow.add_edge(self.AGENT_NODE, END)
+        workflow.add_node(self.agent_node, self.__call_chatbot)
+        workflow.add_node(self.tool_node, tools)
+        workflow.add_edge(START, self.agent_node)
+        workflow.add_conditional_edges(self.agent_node, self.__route_tools)
+        workflow.add_edge(self.tool_node, self.agent_node)
+        workflow.add_edge(self.agent_node, END)
         self.app = workflow.compile()
 
     def __call_chatbot(self, state: State):
@@ -42,18 +42,11 @@ class Workflow:
     def __route_tools(self, state: State) -> str:
         ai_message = state["messages"][-1]
         if len(ai_message.tool_calls) > 0:
-            return self.TOOL_NODE
+            return self.tool_node
         return END
 
 
 
     def run(self, message: str) -> dict[str, Any] | Any:
         msg = HumanMessage(content=message)
-        print(f"state: {self.state}")
         return self.app.invoke({"messages": [msg]})
-
-
-
-
-
-

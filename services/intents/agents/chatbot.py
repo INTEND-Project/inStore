@@ -1,22 +1,17 @@
-import os 
-
-from typing import Optional, List, Any, Dict
+import json
+import os
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import requests
-import json
-
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import (
-    AIMessage,
-    BaseMessage,
-)
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
-from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
-from langchain_core.outputs import GenerationChunk
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage, BaseMessage
+from langchain_core.outputs import ChatGeneration, ChatResult
 from requests.exceptions import HTTPError
 
 NT_BEARER_TOKEN = os.environ.get("NT_BEARER_TOKEN")
+
 
 class Chatbot(BaseChatModel):
 
@@ -29,11 +24,11 @@ class Chatbot(BaseChatModel):
     tool_call_suffix: str = "[/TOOL_CALL]"
 
     def _generate(
-            self,
-            messages: List[BaseMessage],
-            stop: Optional[List[str]] = None,
-            run_manager: Optional[CallbackManagerForLLMRun] = None,
-            **kwargs: Any,
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
     ) -> ChatResult:
 
         prompt = messages[-1].content
@@ -71,13 +66,11 @@ class Chatbot(BaseChatModel):
                                 [/TOOL_CALL]
 
                                 If you receive a prefix of [DataPlacementOptimizer], then that is 
-                                the response of that specific tool.
-                        """
+                                the response of that specific tool. Convey the result of the tool 
+                                to the user consicely and clearly.
+                        """,
                 },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "user", "content": prompt},
             ],
             "stream": False,
         }
@@ -85,27 +78,22 @@ class Chatbot(BaseChatModel):
         headers = {"Authorization": f"Bearer {os.environ.get('NT_BEARER_TOKEN')}"}
 
         try:
-            response = requests.post(url, json=data, headers=headers)
+            response = requests.post(url, json=data, headers=headers, timeout=10000)
             response.raise_for_status()
             reply = response.json()["choices"][0]["message"]
             reply["reasoning_content"] = ""
 
             content = reply["content"]
             tool_calls = reply["tool_calls"]
-            
+
             content, tool_calls = self.__extract_toolcall_from_content(content, tool_calls)
 
-            msg = AIMessage(
-                content=[content],
-                additional_kwargs={},
-                tool_calls=tool_calls
-            )
+            msg = AIMessage(content=[content], additional_kwargs={}, tool_calls=tool_calls)
             generation = ChatGeneration(message=msg)
             return ChatResult(generations=[generation])
         except requests.exceptions.HTTPError as err:
             print(err)
-            raise HTTPError()
-
+            raise HTTPError() from err
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:
@@ -115,7 +103,9 @@ class Chatbot(BaseChatModel):
     def _llm_type(self) -> str:
         return "custom"
 
-    def __extract_toolcall_from_content(self, content: str, tool_calls: List[Dict[str,Any]]) -> tuple[str, List[Dict[str,Any]]]:
+    def __extract_toolcall_from_content(
+        self, content: str, tool_calls: List[Dict[str, Any]]
+    ) -> tuple[str, List[Dict[str, Any]]]:
         if self.tool_call_prefix not in content:
             return content, tool_calls
 

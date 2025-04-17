@@ -3,9 +3,8 @@ name = "instore"
 requires-python = ">= 3.10"
 readme = "README.md"
 
-[tool.autopep8]
-max_line_length = 100
-in-place = true
+[tool.black]
+line-length = 100
 
 [tool.isort]
 line_length = 100
@@ -14,3 +13,13 @@ include_trailing_comma = true
 [tool.pyright]
 reportMissingTypeArgument = true
 strictListInference = true
+
+[tool.pylint]
+disable = [
+	"C0114", # Module docstring
+	"C0115", # Module class docstring
+	"C0116", # Function or method docstring
+	"R0903" # FToo few public methods
+]
+max-line-length = 100
+ignore = ["migrations", "tests"]

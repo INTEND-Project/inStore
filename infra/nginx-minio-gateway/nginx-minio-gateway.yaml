@@ -1,0 +1,69 @@
+# https://github.com/nginx/nginx-s3-gateway/tree/main
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-minio-gateway
+  labels:
+    app: nginx-minio-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-minio-gateway
+  template:
+    metadata:
+      labels:
+        app: nginx-minio-gateway
+    spec:
+      containers:
+      - name: nginx-minio
+        image: ghcr.io/nginxinc/nginx-s3-gateway/nginx-oss-s3-gateway:latest
+        ports:
+          - containerPort: 80
+        envFrom:
+          - configMapRef:
+              name: nginx-minio-gateway-env-file
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-minio-gateway-env-file
+data:
+  ALLOW_DIRECTORY_LIST: "false"
+  APPEND_SLASH_FOR_POSSIBLE_DIRECTORY: "false"
+  AWS_ACCESS_KEY_ID: "pI2TXMsNF0drXusR7cUJ"
+  AWS_SECRET_ACCESS_KEY: "IGwm9Q3VjUqBBH9mHWsIMWyl6yLrONE3Z6VowFTc"
+  # AWS_SESSION_TOKEN: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  AWS_SIGS_VERSION: "4"
+  # DEBUG: "false"
+  # DIRECTORY_LISTING_PATH_PREFIX: '""'
+  # PROVIDE_INDEX_PAGE: "false"
+  # PROXY_CACHE_INACTIVE: 60m
+  # PROXY_CACHE_MAX_SIZE: 10g
+  # PROXY_CACHE_SLICE_SIZE: '"1m"'
+  # PROXY_CACHE_VALID_FORBIDDEN: 30s
+  # PROXY_CACHE_VALID_NOTFOUND: 1m
+  # PROXY_CACHE_VALID_OK: 1h
+  S3_BUCKET_NAME: "demo"
+  S3_REGION: us-east-1
+  S3_SERVER: "minio-internal.minio-dev.svc.cluster.local"
+  S3_SERVER_PORT: "9000"
+  S3_SERVER_PROTO: http
+  S3_SERVICE: s3
+  S3_STYLE: "path"
+  # STRIP_LEADING_DIRECTORY_PATH: /somepath
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-minio
+spec:
+  selector:
+    app: nginx-minio-gateway
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+  type: NodePort

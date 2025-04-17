@@ -1,5 +1,5 @@
 @tarzaa1 @MichalSworz @Ali-Amin
 
-/services/data_placement @tarzaa1
-/services/storage_controller @MichalSworz
-/services/intents @Ali-Amin
+/instore/data_placement @tarzaa1
+/instore/storage_controller @MichalSworz
+/instore/intents @Ali-Amin

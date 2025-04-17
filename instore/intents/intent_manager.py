@@ -1,18 +1,25 @@
+import json
+
+from dotenv import load_dotenv
 from flask import Flask, Response, request
 
-from pkg.interfaces import LLM
 from pkg.llms import llm_factory
 
 from .agents import Chatbot, DataPlacementOptimizerTool, Workflow
+from .config import IntentManagerConfig
 
 
 def main():
     app = Flask(__name__)
 
-    llm: LLM = llm_factory(model_name="octo")
-    chatbot = Chatbot(llm=llm)
+    load_dotenv()
 
+    cfg = IntentManagerConfig(cfg=load_config("intents/config.json"))
+
+    llm = llm_factory(llm_info=cfg.llm_info)
+    chatbot = Chatbot(llm=llm)
     data_placement = DataPlacementOptimizerTool()
+
     w = Workflow(data_placement_tool=data_placement, chatbot=chatbot)
 
     @app.route("/intent", methods=["POST"])
@@ -24,6 +31,12 @@ def main():
         return Response(status=200)
 
     app.run(port=5001)
+
+
+def load_config(file_path: str):
+    with open(file_path, "r") as file:
+        data = json.load(file)
+        return data
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+# https://min.io/docs/minio/kubernetes/upstream/index.html
+
 # Deploys a new Namespace for the MinIO Pod
 apiVersion: v1
 kind: Namespace
@@ -48,10 +50,16 @@ spec:
   selector:
     app: minio
   ports:
-    - protocol: TCP
+    - name: console
+      protocol: TCP
       port: 9090
       targetPort: 9090
       nodePort: 30076
+    - name: s3
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+      nodePort: 30077
   type: NodePort
 ---
 apiVersion: v1

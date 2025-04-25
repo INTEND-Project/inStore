@@ -22,7 +22,7 @@ kubectl apply -f minio/minio-dev.yaml
 
 This deploys a MinIO pod in the `minio-dev` namespace and creates:
 
-- A **NodePort** service exposing the MinIO Console on port `30076`.
+- A **NodePort** service exposing the MinIO Console on port `30076` and the MinIO S3 API on port `30077`.
 - A **ClusterIP** service exposing MinIO internally to other pods at:  
   `minio-internal.minio-dev.svc.cluster.local:9000`.
 

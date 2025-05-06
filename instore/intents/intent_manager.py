@@ -2,6 +2,7 @@ import json
 
 from dotenv import load_dotenv
 from flask import Flask, Response, request
+from flask_cors import CORS
 
 from pkg.llms import llm_factory
 
@@ -11,6 +12,7 @@ from .config import IntentManagerConfig
 
 def main():
     app = Flask(__name__)
+    CORS(app)
 
     load_dotenv()
 
@@ -28,7 +30,7 @@ def main():
         res = w.run(json["intent"])
         for msg in res["messages"]:
             msg.pretty_print()
-        return Response(status=200)
+        return Response(status=200, response=res["messages"][-1].content)
 
     app.run(port=5001)
 

@@ -1,22 +1,23 @@
+import argparse
 import json
+import sys
 
 from dotenv import load_dotenv
 from flask import Flask, Response, request
 from flask_cors import CORS
+from src.agents import Chatbot, DataPlacementOptimizerTool, Workflow
+from src.config import IntentManagerConfig
 
 from pkg.llms import llm_factory
 
-from .agents import Chatbot, DataPlacementOptimizerTool, Workflow
-from .config import IntentManagerConfig
 
-
-def main():
+def main(cfg_path: str):
     app = Flask(__name__)
     CORS(app)
 
     load_dotenv()
 
-    cfg = IntentManagerConfig(cfg=load_config("intents/config.json"))
+    cfg = IntentManagerConfig(cfg=load_config(cfg_path))
 
     llm = llm_factory(llm_info=cfg.llm_info)
     chatbot = Chatbot(llm=llm)
@@ -42,4 +43,13 @@ def load_config(file_path: str):
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        "--cfg",
+        help="config file path",
+        type=str,
+        default="intents/config.json",
+    )
+    args = parser.parse_args()
+    main(args.cfg)

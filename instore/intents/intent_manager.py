@@ -31,7 +31,7 @@ def main(cfg_path: str):
         res = w.run(json["intent"])
         for msg in res["messages"]:
             msg.pretty_print()
-        return Response(status=200, response=res["messages"][-1].content)
+        return Response(status=200, response=res["messages"])
 
     app.run(port=5001)
 

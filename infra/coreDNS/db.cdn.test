@@ -1,0 +1,20 @@
+$ORIGIN cdn.test.
+cdn.test. 	IN	SOA   sns.dns.icann.org. noc.dns.icann.org. (
+					  2025042501 ; serial
+					  7200       ; refresh (2 hours)
+					  3600       ; retry (1 hour)
+					  1209600    ; expire (2 weeks)
+					  3600       ; minimum (1 hour)
+					  )
+; NS Records
+@   IN  NS    ns1.cdn.test.
+@	IN  NS    ns2.cdn.test.
+
+; A Records
+@	IN 	A  	  127.0.0.1
+@	IN  A  	  10.18.1.100 
+
+; CNAME Recrods
+www IN CNAME cdn.test.
+blog IN CNAME  cdn.test.
+labib IN CNAME cdn.test.

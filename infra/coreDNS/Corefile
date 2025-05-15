@@ -1,0 +1,11 @@
+cdn.test {
+    file db.cdn.test
+    log
+    errors
+}
+
+. {
+    forward . 8.8.8.8
+    log
+    errors
+}

@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import requests
+from langchain_core.tools import BaseTool
 from requests.models import HTTPError
 
 from pkg.config import OCTOConfig
@@ -34,7 +35,7 @@ class OCTOLLM(LLM):
         self.stop = stop
         self.max_retries = max_retries
 
-    def generate(self, system_prompt: str, user_prompt: str) -> tuple[str, List[Dict[str, Any]]]:
+    def generate(self, system_prompt: str, user_prompt: str, tools: list[BaseTool]) -> tuple[str, List[Dict[str, Any]]]:
         data = {
             "model": self.llm_config.model_name,
             "messages": [
@@ -44,7 +45,10 @@ class OCTOLLM(LLM):
             "stream": False,
         }
 
-        headers = {"Authorization": f"Bearer {os.environ.get('NT_BEARER_TOKEN')}"}
+        headers = {
+            "Authorization": f"Bearer {os.environ.get('NT_BEARER_TOKEN')}",
+            "Content-Type": "application/json",
+        }
 
         try:
             response = requests.post(
@@ -53,7 +57,6 @@ class OCTOLLM(LLM):
                 headers=headers,
                 timeout=10000,
             )
-
             response.raise_for_status()
 
             reply = response.json()["choices"][0]["message"]

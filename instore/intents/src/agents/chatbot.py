@@ -1,10 +1,11 @@
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
+from langchain_core.tools import BaseTool
 
 from pkg.interfaces import LLM
 
@@ -14,8 +15,7 @@ NT_BEARER_TOKEN = os.environ.get("NT_BEARER_TOKEN")
 class Chatbot(BaseChatModel):
 
     llm: LLM
-    tool_call_prefix: str = "[TOOL_CALL]"
-    tool_call_suffix: str = "[/TOOL_CALL]"
+    tools: Sequence[BaseTool]
 
     def _generate(
         self,
@@ -24,43 +24,23 @@ class Chatbot(BaseChatModel):
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> ChatResult:
-
-        user_prompt: str = str(messages[-1].content)
+        user_prompt: str = str(messages)
         system_prompt = """You are a helpful assistant for a storage management tool. Users
                         will ask you to manage the placement of data.
 
-
                         If you can answer without a tool, just provide the final answer. 
-                        Otherwise, here are the list of tools you can call if it is 
-                        relevant to the user's question. 
-                        [
-                            {
-                                'name': 'DataPlacementOptimizer', 
-                                'args': {
-                                    'content_tag': 'a string describing a content category', 
-                                    'action': 'one of the following values: ["reduce_cost", "reduce_latency", "balance_cost_and_latency"]')
-                                },
+                        Otherwise, use the provided tools to help the user.  
+                        
+                        Once you receive the result of a tool call, revisit the user's original
+                        query to see if this tool call is sufficient to answer or not.
 
-                            }
-                        ]
-
-                        If you need to use a tool, respond in this format:
-                        [TOOL_CALl]
-                        {
-                            "name": <tool_name>, 
-                            "args": <args>
-
-                        }
-                        [/TOOL_CALL]
-
-                        If you receive a prefix of [DataPlacementOptimizer], then that is 
-                        the response of that specific tool. Convey the result of the tool 
-                        to the user consicely and clearly.
+                        Consider that the tool call's results can be used as input for another tool.
                 """
 
         content, tool_calls = self.llm.generate(
             user_prompt=user_prompt,
             system_prompt=system_prompt,
+            tools=self.tools,
         )
         msg = AIMessage(content=content, tool_calls=tool_calls)
         generation = ChatGeneration(message=msg)

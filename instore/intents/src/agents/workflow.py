@@ -1,22 +1,26 @@
-from dataclasses import field
-from ssl import ALERT_DESCRIPTION_UNEXPECTED_MESSAGE
+import uuid
 from typing import Annotated, Any, Literal, Sequence, TypedDict
-from uuid import UUID, uuid4
 
 from langchain_core.messages import AnyMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import BaseToolkit
+from langchain_core.tools import BaseTool
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
+from langgraph.graph import StateGraph
+from langgraph.graph.message import Messages, add_messages
 from langgraph.prebuilt import ToolNode
 
-from .chatbot import AIMessage, Chatbot
-from .tools import AnalyticsTool, BaseTool, DataPlacementOptimizerTool, SimilarIntentRetriever
+from .chatbot import AIMessage, BaseMessage, Chatbot
+
+
+def add_messages_with_log(msg1: Messages, msg2: Messages):
+    for msg in msg1:
+        if isinstance(msg, BaseMessage):
+            msg.pretty_print()
+    return add_messages(msg1, msg2)
 
 
 class State(TypedDict):
-    messages: Annotated[Sequence[AnyMessage], add_messages]
+    messages: Annotated[Sequence[AnyMessage], add_messages_with_log]
 
 
 class Workflow:
@@ -29,8 +33,7 @@ class Workflow:
     def __init__(self, chatbot: Chatbot, tools: Sequence[BaseTool]):
         self.chatbot = chatbot
         self.tools = tools
-
-        thread_id = uuid4()
+        thread_id = uuid.uuid4()
         self.config = {"configurable": {"thread_id": thread_id}}
 
         workflow = StateGraph(State)
@@ -46,7 +49,7 @@ class Workflow:
     def __call_chatbot(self, state: State):
         messages = state["messages"]
         response = self.chatbot.invoke(messages)
-        print(len(messages))
+        print("r", response)
         return {"messages": [*messages, response]}
 
     def __route_model_output(self, state: State) -> Literal["__end__", "tools"]:
@@ -58,6 +61,8 @@ class Workflow:
             return "__end__"
         return "tools"
 
-    def run(self, message: str) -> dict[str, Any] | Any:
-        msg = HumanMessage(content=message)
-        return self.app.invoke({"messages": [msg]}, config=self.config)
+    def run(self, message: dict[str, str]) -> dict[str, Any] | Any:
+
+        expression = message["expression"]
+        msg = HumanMessage(content=expression)
+        return self.app.invoke({"messages": [msg]}, self.config)

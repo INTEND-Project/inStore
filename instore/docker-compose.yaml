@@ -1,0 +1,16 @@
+services:
+  intent_manager:
+    build: .
+    ports:
+      - "5001:5001"
+    depends_on:
+    - neo4j
+    environment:
+      ANALYTICS_ENV: '2'
+
+  neo4j:
+    image: neo4j
+    ports:
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: none

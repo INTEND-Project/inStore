@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 from uuid import uuid4
 
 import requests
@@ -16,7 +16,9 @@ class GeminiLLM(LLM):
     def __init__(self, llm_config: GeminiConfig):
         self.llm_config = llm_config
 
-    def generate(self, system_prompt: str, user_prompt: str, tools: list[BaseTool]) -> tuple[str, List[Dict[str, Any]]]:
+    def generate(
+        self, system_prompt: str, user_prompt: str, tools: Sequence[BaseTool]
+    ) -> tuple[str, List[Dict[str, Any]]]:
         data = {
             "contents": {
                 "role": "user",
@@ -32,6 +34,10 @@ class GeminiLLM(LLM):
                 ],
             },
             "tools": [{"functionDeclarations": self._parameters_from_tools(tools)}],
+            "generationConfig": {
+                "temperature": 0.8,
+                "topP": 1.0,
+            },
         }
 
         headers = {"Content-Type": "application/json"}
@@ -68,7 +74,7 @@ class GeminiLLM(LLM):
     def get_model(self) -> str:
         return self.llm_config.model_name_pretty
 
-    def _parameters_from_tools(self, tools: list[BaseTool]):
+    def _parameters_from_tools(self, tools: Sequence[BaseTool]):
         function_declarations = []
         for tool in tools:
             gemini_tool = {

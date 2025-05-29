@@ -3,12 +3,12 @@ from typing import Any, Union
 
 
 class LLM(Enum):
-    OCTO = "octo"
+    VLLM = "vllm"
     GEMINI = "gemini"
     MOCK = "mock"
 
 
-class OCTOConfig:
+class VLLMConfig:
 
     model_name: str
     model_name_pretty: str

@@ -9,8 +9,6 @@ from langchain_core.tools import BaseTool
 
 from pkg.interfaces import LLM
 
-NT_BEARER_TOKEN = os.environ.get("NT_BEARER_TOKEN")
-
 
 class Chatbot(BaseChatModel):
 
@@ -25,25 +23,47 @@ class Chatbot(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         user_prompt: str = str(messages)
-        system_prompt = """You are a helpful assistant for a storage management tool. Users
-                        will ask you to manage the placement of data.
+        system_prompt = """You are a helpful assistant for a user's storage management environment. Users may ask for information, 
+            request specific actions to be made, or optimize the system towards cost or latency. You do not need to use all tools.
 
-                        If you can answer without a tool, just provide the final answer. 
-                        Otherwise, use the provided tools to help the user.  
-                        
-                        Once you receive the result of a tool call, revisit the user's original
-                        query to see if this tool call is sufficient to answer or not.
+            When you receive a prompt, do the following steps:
+                1. If only information is requested, consider using the topology and analytics tools.
+                2. Use intent database to get all intents to ensure that this intent is not similar or contradictory to other intents. If a conflict has been found,
+                   suggesting alternatives but do not take action on your own:
+                        a. Remove old intent in favor of the new one
+                        b. Cancel the new intent, ask if you can help with anything else if this is case
+                        c. Suggest different dates to apply the new intent, or change the dates of the old intent. Suggest the dates yourself do not ask the user to do so.
+                        d. Balances between 'reduce_latency' and 'reduce_costs' by passing 'balanced' to the recommendation engine.
+                3. If moving videos is required, consider using the topology and analytics tool to find the source node of the video, 
+                   then use their output as input to the storage controller tool.
+                4. If optimization towards costs or latency is required, use outputs from the topology and analytics tools, then call the recommendation engine tool
+                   to get the list of commands that will achieve the request's objectives, then send these commands to the storage controller tool.
+                5. Create the intent
+                6. If an action has been taken and you believe you have achieved the user's request, 
+                   respond giving only a summary in json format of the actions to be taken as 'intents'. Example:
+                    {
+                        "message": "Successfully created intent to decrease costs",
+                        "intent_name": "reduce_cost_sept_2025_dublin",
+                        "actions": "videos [video123,video456] being moved to cold storage [EU_ORIGIN_COLD_1]",
+                        "results": "latency to be increased by 20ms, costs saved during September 2025 are 20 Euros"
+                    }
+                   Successfully created intent to decrease costs:
+                    ### Intent#1234
+                    **Actions taken**: Videos [video123, video456] being moved to cheaper storage.
+                    **Results**: e.g, Latency to be increased by 20ms, costs saved for this month 20 euros (infer the values from analytics result)
 
-                        Consider that the tool call's results can be used as input for another tool.
-                """
+                A few things to ensure:
+                    - If you delete an intent, make sure to delete the Commands associated with it as well
+                    - Intent responses should only be json as specified
+        """
 
         content, tool_calls = self.llm.generate(
             user_prompt=user_prompt,
             system_prompt=system_prompt,
             tools=self.tools,
         )
-        msg = AIMessage(content=content, tool_calls=tool_calls)
-        generation = ChatGeneration(message=msg)
+        message = AIMessage(content=content, tool_calls=tool_calls)
+        generation = ChatGeneration(message=message)
         return ChatResult(generations=[generation])
 
     @property

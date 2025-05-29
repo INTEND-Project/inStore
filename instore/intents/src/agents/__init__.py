@@ -1,8 +1,9 @@
 from .chatbot import Chatbot
 from .tools import (
     AnalyticsTool,
-    DataPlacementOptimizerTool,
-    SimilarIntentRetriever,
+    IntentDatabase,
+    RecommendationEngine,
+    StorageController,
     TopologyRetriever,
 )
 from .workflow import Workflow

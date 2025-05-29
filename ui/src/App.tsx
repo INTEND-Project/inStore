@@ -8,6 +8,8 @@ import { ChatMessages } from './components/messages.tsx'
 interface Message {
 	sender: "human" | "instore"
 	content: string
+	tool_calls?: string[],
+	commands?: string[],
 }
 
 function App() {
@@ -19,12 +21,18 @@ function App() {
 
   const submit = async (newMessage: string): Promise<boolean> => {
 	  setLoading(true)
+	  const newMessages = [...messages, {sender: "human", content: newMessage} as Message]
+	  setMessages(newMessages)
 	  try {
 		  const res = await submitQuery(newMessage)
 		  setMessages(
-			  [...messages, 
-			   {sender: "human", content: newMessage}, 
-			   {sender: "instore", content: res}
+			  [...newMessages, 
+			   {
+				   sender: "instore", 
+				   content: res["reply"],
+				   tool_calls: res["tool_calls"],
+				   commands: res["cmds"],
+			   },
 			  ]
 		  )
 		  setLoading(false)

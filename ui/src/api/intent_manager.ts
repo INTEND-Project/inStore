@@ -4,7 +4,7 @@ const apiUrl = import.meta.env.VITE_INTENT_MANAGER_URL
 
 export const submitQuery = async (text: string) => {
 	const response = await axios.post(`${apiUrl}/intent`, {
-		intent: text
+		expression: text
 	}, {
 		headers: {
 			"Content-Type": "application/json"

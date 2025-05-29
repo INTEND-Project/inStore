@@ -1,17 +1,19 @@
 import argparse
 import json
-import re
-from typing import Sequence
+import os
+from typing import Any, Sequence
 
 from dotenv import load_dotenv
 from flask import Flask, Response, request
 from flask_cors import CORS
+from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
 from src.agents import (
     AnalyticsTool,
     Chatbot,
-    DataPlacementOptimizerTool,
-    SimilarIntentRetriever,
+    IntentDatabase,
+    RecommendationEngine,
+    StorageController,
     TopologyRetriever,
     Workflow,
 )
@@ -26,33 +28,37 @@ def main(cfg_path: str):
     CORS(app)
 
     load_dotenv()
-
+    environment = os.environ.get("ANALYTICS_ENV", default="1")
     cfg = IntentManagerConfig(cfg=load_config(cfg_path))
 
     llm = llm_factory(llm_info=cfg.llm_info)
 
     kg = knowledge_graph_factory(info=cfg.kg_info)
-    kg.create_device(
-        device_name="EU_DUBLIN_CACHE_1",
-        device_type="CACHE",
-        max_capacity_gb="256",
-        allocated_capacity_gb="121",
-        geolocation="dublin",
-        backend="minio",
-    )
 
-    kg.create_application(application_name="streaming_service")
-    kg.create_application(application_name="subscription_service")
-    kg.create_application(application_name="account_management_service")
-
-    kg.create_user(user_name="John_Doe")
-
+    analytics = AnalyticsTool(environment=environment)
     tools: Sequence[BaseTool] = [
-        DataPlacementOptimizerTool(),
-        SimilarIntentRetriever(knowledge_graph=kg),
+        RecommendationEngine(),
+        IntentDatabase(knowledge_graph=kg),
         TopologyRetriever(knowledge_graph=kg),
-        AnalyticsTool(),
+        analytics,
+        StorageController(),
     ]
+
+    for n, _ in analytics.all_environments[environment]["avg_latency_ms"].items():
+        node = n.lower()
+        device_type = "cache" if "cache" in node else "cold" if "cold" in node else "hot"
+        size = "256" if device_type == "cache" else "1024" if device_type == "hot" else "10000"
+        location = (
+            "dublin" if "dublin" in node else "berlin" if "berlin" in node else "paris" if "paris" in node else "us"
+        )
+        kg.create_device(
+            device_name=node,
+            device_type=device_type,
+            max_capacity_gb=size,
+            allocated_capacity_gb="124",
+            backend="minio",
+            geolocation=location,
+        )
 
     chatbot = Chatbot(llm=llm, tools=tools)
     w = Workflow(chatbot=chatbot, tools=tools)
@@ -60,12 +66,39 @@ def main(cfg_path: str):
     @app.route("/intent", methods=["POST"])
     def add_new_intent():
         j = request.get_json()
-        res = w.run(j["intent"])
+        res = w.run(j)
+        tool_calls = []
+        cmds = []
         for msg in res["messages"]:
-            msg.pretty_print()
-        return Response(status=200, response=res["messages"])
+            if isinstance(msg, AIMessage) and msg.tool_calls is not None and len(msg.tool_calls) > 0:
+                for call in msg.tool_calls:
+                    tool_calls.append(call["name"])
+                    if call["name"] == "StorageController":
+                        if "StorageController" in tool_calls:
+                            cmds = [call["args"]]
+                        else:
+                            cmds.append(call["args"])
 
-    app.run(port=5001)
+        response = json.dumps(
+            {
+                "cmds": cmds,
+                "tool_calls": tool_calls,
+                "reply": res["messages"][-1].content,
+            }
+        )
+
+        return Response(status=200, response=response)
+
+    @app.route("/intent", methods=["GET"])
+    def get_intents():
+        res = kg.get_intents()
+        response: list[dict[str, Any]] = []
+        for r in res:
+            response.append(r.data())
+
+        return Response(status=200, response=json.dumps(response))
+
+    app.run(host="0.0.0.0", port=5001)
 
 
 def load_config(file_path: str):

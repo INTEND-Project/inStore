@@ -1,7 +1,8 @@
 import os
-from typing import Any
+from typing import Any, Literal
 
-from neo4j import Driver, GraphDatabase
+from neo4j import Driver, GraphDatabase, Query, Record
+from typing_extensions import LiteralString
 
 from pkg.config import Neo4jKnowledgeGraphConfig
 from pkg.interfaces import KnowledgeGraph
@@ -22,18 +23,25 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
             ),
         )
 
-    def get_intents(self) -> list[dict[str, Any]]:
+    def execute_query(self, query: str):
+        q = Query("")
+        q.text = query
+        records, a, b = self.driver.execute_query(q)
+        return records, a, b
+
+    def get_intents(self) -> list[Record]:
         records, _, _ = self.driver.execute_query(
             """
-                MATCH (u:User)-[r1:CREATED]->(i:Intent)-[r2:APPLIED_ON]->(d:Device)
-                RETURN u,i,d,r1,r2
+                MATCH (i:Intent)-[r:RUNS]->(c:Command)
+                RETURN i,c
                 """
         )
-        return [self._node_to_dict(r["i"]) for r in records]
+        return records
 
-    def create_intent(self, user_name: str, intent_name: str, affected_nodes: list[str]):
+    def create_intent(self, user_name: str, intent_name: str, commands: list[str]):
         with self.driver.session() as session:
-            session.execute_write(self.__create_intent_tx, intent_name, user_name, affected_nodes)
+            print(intent_name, user_name, commands)
+            session.execute_write(self.__create_intent_tx, intent_name, user_name, commands)
 
     def create_user(self, user_name: str):
         self.driver.execute_query(
@@ -86,7 +94,7 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
     def delete_intent(self, intent_name: str):
         raise NotImplementedError("Delete intent not implemented yet")
 
-    def __create_intent_tx(self, tx, intent_name: str, user_name: str, device_name: list[str]):
+    def __create_intent_tx(self, tx, intent_name: str, user_name: str, commands: list[str]):
         # Create INTENT
         result = tx.run(
             """
@@ -96,31 +104,27 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
             name=intent_name,
         )
 
-        # Link INTENT to USER
-        result = tx.run(
-            """
-                MATCH (i:Intent {name: $intent_name })
-                MATCH (u:User {name: $user_name })
-                MERGE (u)-[r:CREATED]->(i)
-                RETURN i.name as name
-            """,
-            intent_name=intent_name,
-            user_name=user_name,
-        )
-
-        # Link INTENT to DEVICE
-        result = tx.run(
-            """
+        # Link INTENT to Command
+        for cmd in commands:
+            result = tx.run(
+                """
+                MERGE (c:Command {cmd: $cmd})
+                RETURN c.cmd
+                """,
+                cmd=cmd,
+            )
+            result = tx.run(
+                """
                     MATCH (i:Intent {name: $intent_name })
-                    MATCH (d:Device {name: $device_name })
-                    MERGE (i)-[r:APPLIED_ON]->(d)
+                    MATCH (c:Command {cmd: $cmd })
+                    MERGE (i)-[r:RUNS]->(c)
                     RETURN i.name
                 """,
-            intent_name=intent_name,
-            device_name=device_name,
-        )
+                intent_name=intent_name,
+                cmd=cmd,
+            )
 
-        return result.single()
+        return
 
     def get_topology(self, region: str = "all") -> list[dict[str, Any]]:
         records = None

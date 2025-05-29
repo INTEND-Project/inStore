@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from neo4j import Record
+
 
 class KnowledgeGraph(ABC):
     @abstractmethod
-    def create_intent(self, user_name: str, intent_name: str, affected_nodes: list[str]):
+    def create_intent(self, user_name: str, intent_name: str, commands: list[str]):
         pass
 
     @abstractmethod
@@ -32,9 +34,13 @@ class KnowledgeGraph(ABC):
         pass
 
     @abstractmethod
-    def get_intents(self) -> list[dict[str, Any]]:
+    def get_intents(self) -> list[Record]:  # TODO: Create type here instead of Record
         pass
 
     @abstractmethod
     def get_topology(self, region: str = "all") -> list[dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    def execute_query(self, query: str) -> Any:
         pass

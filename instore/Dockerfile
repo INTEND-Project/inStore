@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5001
 
-CMD ["python", "intents/intent_manager.py", "--cfg=./intents/config-docker.json"]
+CMD ["python", "intents/intent_manager.py", "--cfg=./intents/config-llama-docker.json"]

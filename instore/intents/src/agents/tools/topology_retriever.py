@@ -1,10 +1,12 @@
 from typing import Optional
 
 from langchain_core.callbacks import CallbackManagerForToolRun
+from langchain_core.messages import ToolMessage
 from langchain_core.tools import ArgsSchema, BaseTool
 from pydantic import BaseModel, Field
 
 from pkg.interfaces import KnowledgeGraph
+from pkg.utils.pretty_print import pretty_print
 
 
 class TopologyRetrieverInput(BaseModel):
@@ -21,4 +23,6 @@ class TopologyRetriever(BaseTool):
     args_schema: Optional[ArgsSchema] = TopologyRetrieverInput
 
     def _run(self, region: str, run_manager: Optional[CallbackManagerForToolRun] = None):
-        return self.knowledge_graph.get_topology(region=region.lower())
+        msg = self.knowledge_graph.get_topology(region=region.upper())
+        pretty_print(str(msg)[:100], "Tool Message (Topology Retriever)")
+        return msg

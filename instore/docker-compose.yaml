@@ -4,9 +4,9 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-    - neo4j
+      - neo4j
     environment:
-      ANALYTICS_ENV: '2'
+      ANALYTICS_ENV: ${ANALYTICS_ENV}
 
   neo4j:
     image: neo4j

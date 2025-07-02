@@ -35,8 +35,7 @@ class GeminiLLM(LLM):
             },
             "tools": [{"functionDeclarations": self._parameters_from_tools(tools)}],
             "generationConfig": {
-                "temperature": 0.8,
-                "topP": 1.0,
+                "temperature": 0.1,
             },
         }
 

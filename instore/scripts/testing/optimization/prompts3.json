@@ -1,0 +1,14 @@
+{
+  "prompts": [
+    "5s :\"Ensure that there is at least 20GB free in the hot storage during April 2027.\"",
+    "22s :\"The Madrid cache will be deleted and removed from the system on November 2027, ensure videos accessed there are available in Hot storage.\"",
+    "10s :\"For the Athens cache, by January 1, 2027, reduce latency.\"",
+    "15s :\"To reduce costs, identify videos with under 400 monthly requests from Hot storage and move them to cold storage on Feb 1 2027.\"",
+    "26s :\"For the London cache, by July 2027, cut storage costs.",
+    "26s :\"Anticipating high traffic for all videos on December 5, 2027, for the Amsterdam cache, ensure the system is prepared.\"",
+    "12s :\"In Germany, reduce latency during October 2027.\"",
+    "21s :\"Reduce latency for users in Rome starting September 15, 2027.\"",
+    "4s :\"Lower storage costs in Paris during August 2027 by moving videos with under 200 requests in the last week to cheaper storage.\"",
+    "13s :\"Move the lowest 3 accessed videos from Hot storage to cold storage on 1st March 2027.\""
+  ]
+}

@@ -6,7 +6,9 @@ from neo4j import Record
 
 class KnowledgeGraph(ABC):
     @abstractmethod
-    def create_intent(self, user_name: str, intent_name: str, commands: list[str]):
+    def create_intent(
+        self, intent_name: str, start_from: str, end_at: str, objective: str, commands: list[dict[str, str]]
+    ):
         pass
 
     @abstractmethod
@@ -34,11 +36,23 @@ class KnowledgeGraph(ABC):
         pass
 
     @abstractmethod
-    def get_intents(self) -> list[Record]:  # TODO: Create type here instead of Record
+    def get_intents(self) -> list[object]:
         pass
 
     @abstractmethod
-    def get_topology(self, region: str = "all") -> list[dict[str, Any]]:
+    def get_conflicting_intents(self, start_time: str, end_time: str, objective: str) -> list[object]:
+        pass
+
+    @abstractmethod
+    def get_intent(self, name: str) -> object:
+        pass
+
+    @abstractmethod
+    def get_device(self, name: str) -> object:
+        pass
+
+    @abstractmethod
+    def get_topology(self, region: str = "ALL") -> list[dict[str, Any]]:
         pass
 
     @abstractmethod

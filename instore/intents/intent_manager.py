@@ -11,7 +11,9 @@ from langchain_core.tools import BaseTool
 from src.agents import (
     AnalyticsTool,
     Chatbot,
-    IntentDatabase,
+    IntentConflictDetector,
+    IntentCreator,
+    IntentUpdater,
     RecommendationEngine,
     StorageController,
     TopologyRetriever,
@@ -28,37 +30,45 @@ def main(cfg_path: str):
     CORS(app)
 
     load_dotenv()
-    environment = os.environ.get("ANALYTICS_ENV", default="1")
+    # environment = os.environ.get("ANALYTICS_ENV", default="6")
     cfg = IntentManagerConfig(cfg=load_config(cfg_path))
 
     llm = llm_factory(llm_info=cfg.llm_info)
 
     kg = knowledge_graph_factory(info=cfg.kg_info)
 
+    environment_file = open(f"./scripts/testing/environments/{os.environ.get('ANALYTICS_ENV')}")
+    environment = json.loads(environment_file.read())
     analytics = AnalyticsTool(environment=environment)
+    intent_conflict_detector = IntentConflictDetector(knowledge_graph=kg)
+    # TODO (Ali Amin): Use pre-determined cypher queries for intent creation
     tools: Sequence[BaseTool] = [
         RecommendationEngine(),
-        IntentDatabase(knowledge_graph=kg),
+        intent_conflict_detector,
+        IntentUpdater(knowledge_graph=kg),
         TopologyRetriever(knowledge_graph=kg),
         analytics,
         StorageController(),
     ]
-
-    for n, _ in analytics.all_environments[environment]["avg_latency_ms"].items():
-        node = n.lower()
-        device_type = "cache" if "cache" in node else "cold" if "cold" in node else "hot"
-        size = "256" if device_type == "cache" else "1024" if device_type == "hot" else "10000"
-        location = (
-            "dublin" if "dublin" in node else "berlin" if "berlin" in node else "paris" if "paris" in node else "us"
-        )
-        kg.create_device(
-            device_name=node,
-            device_type=device_type,
-            max_capacity_gb=size,
-            allocated_capacity_gb="124",
-            backend="minio",
-            geolocation=location,
-        )
+    for n in [*environment["servers"], *environment["caches"]]:
+        if n["type"] == "origin":
+            kg.create_device(
+                device_name=n["name"],
+                device_type=n["type"],
+                max_capacity_gb=n["capacity_in_GB"],
+                allocated_capacity_gb=n["capacity_in_GB"] / 4,
+                backend="minio",
+                geolocation=n["location"].upper(),
+            )
+        else:
+            kg.create_device(
+                device_name=n["name"],
+                device_type=n["type"],
+                max_capacity_gb=n["capacity_in_GB"],
+                allocated_capacity_gb=n["capacity_in_GB"] / 4,
+                backend="minio",
+                geolocation=n["name"].split("_")[0].upper(),
+            )
 
     chatbot = Chatbot(llm=llm, tools=tools)
     w = Workflow(chatbot=chatbot, tools=tools)
@@ -92,11 +102,17 @@ def main(cfg_path: str):
     @app.route("/intent", methods=["GET"])
     def get_intents():
         res = kg.get_intents()
-        response: list[dict[str, Any]] = []
-        for r in res:
-            response.append(r.data())
+        return Response(status=200, response=json.dumps(res))
 
-        return Response(status=200, response=json.dumps(response))
+    @app.route("/intent/<name>", methods=["GET"])
+    def get_intent(name: str):
+        res = kg.get_intent(name)
+        return Response(status=200, response=json.dumps(res))
+
+    @app.route("/device/<name>", methods=["GET"])
+    def get_device(name: str):
+        res = kg.get_device(name)
+        return Response(status=200, response=json.dumps(res))
 
     app.run(host="0.0.0.0", port=5001)
 

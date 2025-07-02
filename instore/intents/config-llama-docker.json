@@ -1,0 +1,17 @@
+{
+  "port": 5001,
+  "llm_info": {
+    "provider": "vllm-llama",
+    "config": {
+      "model_name": "Infermatic/Llama-3.3-70B-Instruct-FP8-Dynamic",
+      "model_name_pretty": "Llama3.3-70B",
+      "endpoint": "http://10.60.26.10:8001/v1/chat/completions"
+    }
+  },
+  "knowledge_graph": {
+    "provider": "neo4j",
+    "config": {
+      "url": "bolt://neo4j:7687"
+    }
+  }
+}

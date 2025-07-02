@@ -1,17 +1,17 @@
 {
-	"port": 5001,
-	"llm_info": {
-		"provider": "vllm",
-		"config": {
-			"model_name": "/models/models--qwen--qwq-32b/snapshots/976055f8c83f394f35dbd3ab09a285a984907bd0/",
-			"model_name_pretty": "Qwen:qwq32b",
-			"endpoint": "http://vllm-api.com/v1/chat/completions"
-		}
-	},
-	"knowledge_graph": {
-		"provider": "neo4j",
-		"config": {
-			"url": "bolt://neo4j:7687"
-		}
-	}
+  "port": 5001,
+  "llm_info": {
+    "provider": "vllm",
+    "config": {
+      "model_name": "Qwen/Qwen3-32B",
+      "model_name_pretty": "Qwen:qwq32b",
+      "endpoint": "http://10.60.26.10:8000/v1/chat/completions"
+    }
+  },
+  "knowledge_graph": {
+    "provider": "neo4j",
+    "config": {
+      "url": "bolt://neo4j:7687"
+    }
+  }
 }

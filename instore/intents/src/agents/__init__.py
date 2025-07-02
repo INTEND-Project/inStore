@@ -1,7 +1,9 @@
 from .chatbot import Chatbot
 from .tools import (
     AnalyticsTool,
-    IntentDatabase,
+    IntentConflictDetector,
+    IntentCreator,
+    IntentUpdater,
     RecommendationEngine,
     StorageController,
     TopologyRetriever,

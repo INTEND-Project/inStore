@@ -4,6 +4,7 @@ from typing import Any, Union
 
 class LLM(Enum):
     VLLM = "vllm"
+    VLLM_LLAMA = "vllm-llama"
     GEMINI = "gemini"
     MOCK = "mock"
 

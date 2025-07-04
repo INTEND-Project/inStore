@@ -11,8 +11,8 @@ from pkg.utils.pretty_print import pretty_print
 
 
 class StorageControllerInput(BaseModel):
-    commands: dict[str, Any] = Field(
-        description="The command list to run on the content and target storage environment."
+    commands: str = Field(
+        description="The command list as a string to run on the content and target storage environment."
     )
 
 
@@ -24,7 +24,13 @@ class StorageController(BaseTool):
 
     def _run(self, commands: str, run_manager: Optional[CallbackManagerForToolRun] = None):
         try:
-            for cmd in commands["commands"]:
+            cmds = json.loads(commands)
+            v = None
+            if type(cmds) is list:
+                v = cmds
+            else:
+                v = cmds["commands"]
+            for cmd in v:
                 if cmd["source"] is None or cmd["source"] == "":
                     return "Source cannot be empty"
                 if cmd["cmd"].lower() == "move" or cmd["cmd"].lower() == "copy":

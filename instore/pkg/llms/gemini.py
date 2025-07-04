@@ -56,6 +56,9 @@ class GeminiLLM(LLM):
 
             content: str = ""
             tool_calls: list[dict[str, Any]] = []
+            if "content" not in reply:
+                print(data)
+                print(f"\n\n\n{reply}\n\n\n")
             parts: list[dict[str, Any]] = reply["content"]["parts"]
             for part in parts:
                 if list(part.keys())[0] == "functionCall":

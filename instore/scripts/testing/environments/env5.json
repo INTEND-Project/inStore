@@ -46,7 +46,7 @@
       "costs_euro_per_gb_per_month": 0.3
     },
     {
-      "name": "BERLIN_CAHCE",
+      "name": "BERLIN_CACHE",
       "type": "cache",
       "capacity_in_GB": 172,
       "avg_latency_ms": 5,
@@ -91,7 +91,7 @@
           "ATHENS_CACHE",
 
           "PARIS_CACHE",
-          "BERLIN_CAHCE",
+          "BERLIN_CACHE",
           "ROME_CACHE",
           "MADRID_CACHE",
           "VIENNA_CACHE"
@@ -114,7 +114,7 @@
             "Last_Month": 3740,
             "Last_Year": 47076
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 207,
             "Last_Month": 2680,
             "Last_Year": 42821
@@ -149,7 +149,7 @@
           "ATHENS_CACHE",
           "ROME_CACHE",
           "PARIS_CACHE",
-          "BERLIN_CAHCE"
+          "BERLIN_CACHE"
         ],
         "Requests_by_Location": {
           "HOT_Storage": {
@@ -188,7 +188,7 @@
             "Last_Month": 2119,
             "Last_Year": 19995
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 237,
             "Last_Month": 4663,
 
@@ -290,7 +290,7 @@
       "video5": {
         "size_gb": 18.8,
 
-        "locations_stored": ["HOT_Storage", "LONDON_CACHE", "BERLIN_CAHCE"],
+        "locations_stored": ["HOT_Storage", "LONDON_CACHE", "BERLIN_CACHE"],
         "Requests_by_Location": {
           "HOT_Storage": {
             "Last_Week": 484,
@@ -303,7 +303,7 @@
             "Last_Month": 2859,
             "Last_Year": 62673
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 115,
             "Last_Month": 8277,
 
@@ -440,7 +440,7 @@
           "HOT_Storage",
           "AMSTERDAM_CACHE",
           "ROME_CACHE",
-          "BERLIN_CAHCE"
+          "BERLIN_CACHE"
         ],
         "Requests_by_Location": {
           "HOT_Storage": {
@@ -458,7 +458,7 @@
             "Last_Month": 1344,
             "Last_Year": 83162
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 387,
             "Last_Month": 1674,
             "Last_Year": 40980
@@ -533,7 +533,7 @@
           "VIENNA_CACHE",
           "AMSTERDAM_CACHE",
           "LONDON_CACHE",
-          "BERLIN_CAHCE"
+          "BERLIN_CACHE"
         ],
         "Requests_by_Location": {
           "HOT_Storage": {
@@ -556,7 +556,7 @@
             "Last_Month": 8487,
             "Last_Year": 51555
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 297,
             "Last_Month": 2130,
             "Last_Year": 49357
@@ -624,7 +624,7 @@
           "COLD_Storage",
           "VIENNA_CACHE",
 
-          "BERLIN_CAHCE",
+          "BERLIN_CACHE",
           "AMSTERDAM_CACHE",
           "PARIS_CACHE",
           "ROME_CACHE"
@@ -641,7 +641,7 @@
             "Last_Month": 8457,
             "Last_Year": 75127
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 399,
             "Last_Month": 1570,
 
@@ -719,7 +719,7 @@
           "HOT_Storage",
           "ATHENS_CACHE",
           "LONDON_CACHE",
-          "BERLIN_CAHCE",
+          "BERLIN_CACHE",
           "VIENNA_CACHE",
           "ROME_CACHE",
           "MADRID_CACHE",
@@ -742,7 +742,7 @@
             "Last_Month": 5086,
             "Last_Year": 61556
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 139,
             "Last_Month": 3030,
             "Last_Year": 85011
@@ -779,7 +779,7 @@
           "MADRID_CACHE",
           "ROME_CACHE",
           "VIENNA_CACHE",
-          "BERLIN_CAHCE"
+          "BERLIN_CACHE"
         ],
         "Requests_by_Location": {
           "COLD_Storage": {
@@ -803,7 +803,7 @@
             "Last_Month": 8136,
             "Last_Year": 9756
           },
-          "BERLIN_CAHCE": {
+          "BERLIN_CACHE": {
             "Last_Week": 210,
             "Last_Month": 6792,
             "Last_Year": 53029

@@ -58,7 +58,9 @@ def send_requests(env, category, wait_interval, prompts):
                 headers={
                     "Content-Type": "application/json",
                 },
+                timeout=600,
             )
+            print(res)
             end = time.time()
             try:
                 if res.status_code == 429:
@@ -80,7 +82,6 @@ def send_requests(env, category, wait_interval, prompts):
                 )
             except requests.exceptions.HTTPError as e:
 
-                print(e)
                 if retry < 3:
                     retry = retry + 1
                     continue
@@ -98,7 +99,9 @@ def send_requests(env, category, wait_interval, prompts):
                             f"{simulated_time}",
                         ]
                     )
+                    print(e)
             if int(wait_interval) > 0:
+                print(f"waiting for {wait_interval}")
                 time.sleep(int(wait_interval))  # Prevents going over usage limits (e.g., gemini)
 
             i = i + 1
@@ -131,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--compose", required=True)
     args = parser.parse_args()
     env_files = list(os.listdir("./environments"))
-    for env in env_files:  # ["env1.json", "env2.json", "env3.json", "env4.json", "env5.json"]: # Edit here if needed
+    for env in ["env2.json", "env4.json", "env5.json"]:  # Edit here if needed
         if args.category == "optimization":
             prompt_files = list(os.listdir("./optimization"))
             for prompt_file in prompt_files:

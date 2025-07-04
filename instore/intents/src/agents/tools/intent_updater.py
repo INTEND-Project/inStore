@@ -27,3 +27,5 @@ class IntentUpdater(BaseTool):
         if len(records) > 0:
             pretty_print("Successfully created intent", "Tool Message (Intent Database)")
             return "Succesfully created intent"
+        else:
+            return "intent created"

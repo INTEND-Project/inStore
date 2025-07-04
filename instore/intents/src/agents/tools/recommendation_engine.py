@@ -148,6 +148,6 @@ class RecommendationEngine(BaseTool):
                             }
                         )
 
-        msg = str({"commands": str(commands)})
+        msg = str({"commands": str(commands).replace("'", '"')})
         pretty_print(f"{msg}...", "Tool Message (Recommendation Engine)")
         return msg

@@ -1,14 +1,15 @@
 {
-  "prompts": [
+  "prompts": [],
+  "prompts_done": [
+    "13s :\"Move the lowest 3 accessed videos from Hot storage to cold storage on 1st March 2026.\"",
     "22s :\"The Madrid cache will be deleted and removed from the system on November 2026, ensure videos accessed there are available in Hot storage.\"",
     "21s :\"Reduce latency for users in Rome starting September 15, 2026.\"",
     "4s :\"Lower storage costs in Paris during August 2026 by moving videos with under 200 requests in the last week to cheaper storage.\"",
-    "26s :\"For the London cache, by July 2026, cut storage costs.",
-    "10s :\"For the Athens cache, by January 1, 2026, reduce latency.\"",
+    "26s :\"For the London cache, in July 2026, cut storage costs.",
+    "10s :\"For the Athens cache, in January 1, 2026, reduce latency.\"",
     "5s :\"Ensure that there is at least 20GB free in the hot storage during April 2026.\"",
     "12s :\"In Germany, reduce latency during October 2026.\"",
     "15s :\"To reduce costs, identify videos with under 400 monthly requests from Hot storage and move them to cold storage on Feb 1 2026.\"",
-    "26s :\"Anticipating high traffic for all videos on December 5, 2026, for the Amsterdam cache, ensure the system is prepared.\"",
-    "13s :\"Move the lowest 3 accessed videos from Hot storage to cold storage on 1st March 2026.\""
+    "26s :\"Anticipating high traffic for all videos on December 5, 2026, for the Amsterdam cache, ensure the system is prepared.\""
   ]
 }

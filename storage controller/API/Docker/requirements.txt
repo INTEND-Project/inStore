@@ -1,0 +1,8 @@
+# Scylla driver package with hash
+scylla-driver==3.29.3
+cassandra-driver
+# Other dependencies required by the project
+requests==2.25.1
+numpy==1.20.2
+Flask==3.1.0
+boto3==1.39.12

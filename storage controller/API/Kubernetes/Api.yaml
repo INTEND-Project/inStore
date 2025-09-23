@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: storage-controller
+  namespace: scylla
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage-controller
+  template:
+    metadata:
+      labels:
+        app: storage-controller
+    spec:
+      containers:
+      - name: storage-controller
+        image: michalsworz/storage-controller:v4.8
+        ports:
+        - containerPort: 5000       
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-controller-service
+  namespace: scylla
+spec:
+  selector:
+    app: storage-controller
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+    nodePort: 30500

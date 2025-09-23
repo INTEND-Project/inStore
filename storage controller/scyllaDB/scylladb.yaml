@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: scylla
+  labels:
+    app: scylla-app
+  namespace: scylla
+spec:
+  serviceName: scylla-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scylla-app
+  template:
+    metadata:
+      labels:
+        app: scylla-app
+    spec:
+      containers:
+      - name: scylla-container
+        image: scylladb/scylla:5.2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 7000
+          name: intra-node
+        - containerPort: 7001
+          name: tls-intra-node
+        - containerPort: 7199
+          name: jmx
+        - containerPort: 9042
+          name: cql
+        volumeMounts:
+        - name: scylla-data
+          mountPath: /var/lib/scylla
+  volumeClaimTemplates:
+  - metadata:
+      name: scylla-data
+    spec:
+      accessModes:
+      - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 10Gi
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: scylla-app
+  name: scylla-service
+  namespace: scylla
+spec:
+  clusterIP: None
+  ports:
+  - port: 9042
+  selector:
+    app: scylla-app
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: scylla-data-scylla-0
+  namespace: scylla
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/scylla
+~

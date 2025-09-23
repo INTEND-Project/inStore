@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata: 
+  name: task-executer
+  namespace: scylla
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: task-executer
+  template:
+    metadata:
+      labels:
+        app: task-executer
+    spec:
+      containers:
+      - name: task-executer
+        image: michalsworz/taskexecuter:v0.7
+        env: 
+        - name: PYTHONUNBUFFERED
+          value: "1"

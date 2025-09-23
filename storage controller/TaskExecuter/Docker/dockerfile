@@ -1,0 +1,15 @@
+# Use the official Python image as a base
+FROM python:3.9-slim
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy requirements.txt and install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copy the rest of your application code
+COPY . .
+
+# Run the Python file when the container starts
+CMD ["python", "strg-bck-end.py"]

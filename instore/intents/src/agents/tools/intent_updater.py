@@ -16,7 +16,7 @@ class IntentUpdater(BaseTool):
     name: str = "IntentDatabase"
     description: str = """
     Neo4j intent database. Use this to add and update intents. The following is an example of intent creation:
-        CREATE (i:Intent {name: 'reduce_latency_dublin_sep2025', objective: 'reduce_latency', from: '2025-09-01T00:00:00', to: '2025-09-30T23:59:59'}) CREATE (c1:Command {cmd: 'MOVE', date_time: '2025-05-30', source: 'EU_ORIGIN_HOT', destination: 'EU_DUBLIN_CACHE_1', content_id: 'video456'}) CREATE (c2:Command {cmd: 'MOVE', date_time: '2025-05-30', source: 'EU_ORIGIN_COLD', destination: 'EU_ORIGIN_HOT', content_id: 'video456'}) CREATE (i)-[:RUNS]->(c1) CREATE (i)-[:RUNS]->(c2) MERGE (d1:Device {name: 'EU_ORIGIN_HOT'}) MERGE (d2:Device {name: 'EU_DUBLIN_CACHE_1'}) MERGE (d3:Device {name: 'EU_ORIGIN_COLD'}) CREATE (c1)-[:MOVE_FROM {video_ids: ['video456']}]->(d1) CREATE (c1)-[:MOVE_TO {video_ids: ['video456']}]->(d2) CREATE (c2)-[:MOVE_FROM {video_ids: ['video456']}]->(d3) CREATE (c2)-[:MOVE_TO {video_ids: ['video456']}]->(d1) RETURN i.name
+        CREATE (i:Intent {name: 'avoid_full_storage_node_1', objective: 'avoid_full_storage', timestamp: '2025-09-01T00:00:00'}) CREATE (c1:Command {cmd: 'REDUCE_TTL', date_time: '2025-05-30', destination: 'EDGE_NODE_1'}) CREATE (i)-[:RUNS]->(c1) CREATE (i)-[:RUNS]->(c2) MERGE (d1:Device {name: 'EDGE_NODE_1'}) MERGE (d2:Device {name: 'EDGE_NODE_2'}) CREATE (c1)-[:ON]->(d1) RETURN i.name
         """
 
     knowledge_graph: KnowledgeGraph

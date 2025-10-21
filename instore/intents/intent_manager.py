@@ -37,38 +37,14 @@ def main(cfg_path: str):
 
     kg = knowledge_graph_factory(info=cfg.kg_info)
 
-    environment_file = open(f"./scripts/testing/environments/{os.environ.get('ANALYTICS_ENV')}")
-    environment = json.loads(environment_file.read())
-    analytics = AnalyticsTool(environment=environment)
     intent_conflict_detector = IntentConflictDetector(knowledge_graph=kg)
     # TODO (Ali Amin): Use pre-determined cypher queries for intent creation
     tools: Sequence[BaseTool] = [
         RecommendationEngine(),
         intent_conflict_detector,
         IntentUpdater(knowledge_graph=kg),
-        TopologyRetriever(knowledge_graph=kg),
-        analytics,
         StorageController(),
     ]
-    for n in [*environment["servers"], *environment["caches"]]:
-        if n["type"] == "origin":
-            kg.create_device(
-                device_name=n["name"],
-                device_type=n["type"],
-                max_capacity_gb=n["capacity_in_GB"],
-                allocated_capacity_gb=n["capacity_in_GB"] / 4,
-                backend="minio",
-                geolocation=n["location"].upper(),
-            )
-        else:
-            kg.create_device(
-                device_name=n["name"],
-                device_type=n["type"],
-                max_capacity_gb=n["capacity_in_GB"],
-                allocated_capacity_gb=n["capacity_in_GB"] / 4,
-                backend="minio",
-                geolocation=n["name"].split("_")[0].upper(),
-            )
 
     chatbot = Chatbot(llm=llm, tools=tools)
     w = Workflow(chatbot=chatbot, tools=tools)

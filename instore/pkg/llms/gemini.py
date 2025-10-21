@@ -49,6 +49,7 @@ class GeminiLLM(LLM):
                 headers=headers,
                 timeout=10000,
             )
+            print(response.json())
 
             response.raise_for_status()
 
@@ -59,6 +60,8 @@ class GeminiLLM(LLM):
             if "content" not in reply:
                 print(data)
                 print(f"\n\n\n{reply}\n\n\n")
+            if "content" not in reply or "parts" not in reply["content"]:
+                return "Completed", []
             parts: list[dict[str, Any]] = reply["content"]["parts"]
             for part in parts:
                 if list(part.keys())[0] == "functionCall":

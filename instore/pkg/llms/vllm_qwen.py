@@ -7,18 +7,23 @@ import requests
 from langchain_core.messages.tool import tool_call
 from langchain_core.tools import BaseTool
 from requests.models import HTTPError
+from transformers import AutoTokenizer
+from vllm import LLM, sampling_params
+from vllm.entrypoints.openai.protocol import ChatCompletionRequest
 
 from pkg.config import VLLMConfig
 from pkg.interfaces.llm import LLM
+from pkg.llms.qwen3coder_tool_parser import Qwen3CoderToolParser
 
 
-class VLLM(LLM):
+class VLLM_QWEN(LLM):
     llm_config: VLLMConfig
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
     timeout: Optional[int] = None
     stop: Optional[List[str]] = None
     max_retries: int = 2
+    parser: Qwen3CoderToolParser = None
 
     def __init__(
         self,
@@ -33,6 +38,8 @@ class VLLM(LLM):
         self.max_tokens = max_tokens
         self.stop = stop
         self.max_retries = max_retries
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-Coder-480B-A35B-Instruct")
+        self.parser = Qwen3CoderToolParser(tokenizer)
 
     def generate(
         self, system_prompt: str, user_prompt: str, tools: Sequence[BaseTool]
@@ -45,7 +52,6 @@ class VLLM(LLM):
             vllm_url = self.llm_config.endpoint
         data = {
             "model": model_name,
-            # "chat_template_kwargs": {"enable_thinking": False},
             "temperature": 0.6,
             "top_p": 0.95,
             "top_k": 20,
@@ -93,17 +99,23 @@ class VLLM(LLM):
                     tc = json.loads(tc)
                     return content, [{"name": tc["name"], "args": tc["arguments"], "id": response.json()["id"]}]
 
+            r = ChatCompletionRequest(messages=[], seed=0)
+            r.tools = data["tools"]
+            c = self.parser.extract_tool_calls(content, r)
+
             tool_calls = []
-            if reply["tool_calls"] is not None:
-                for tc in reply["tool_calls"]:
+            if c.tool_calls is not None:
+                content = c.content
+                for tc in c.tool_calls:
                     tool_calls.append(
                         {
-                            "name": tc["function"]["name"],
-                            "args": json.loads(tc["function"]["arguments"]),
-                            "id": tc["id"],
+                            "name": tc.function.name,
+                            "args": json.loads(tc.function.arguments),
+                            "id": tc.id,
                         }
                     )
-
+            if content is None:
+                content = ""
             return content, tool_calls
 
         except requests.exceptions.HTTPError as err:

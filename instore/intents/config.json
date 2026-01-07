@@ -3,9 +3,9 @@
   "llm_info": {
     "provider": "vllm",
     "config": {
-      "model_name": "Qwen/Qwen3-32B",
-      "model_name_pretty": "Qwen:qwq32b",
-      "endpoint": "http://10.60.26.10:8000/v1/chat/completions"
+      "model_name": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
+      "model_name_pretty": "Qwen3 Coder 480B A35B Instruct FP8",
+      "endpoint": "http://10.60.26.10:8002/v1/chat/completions"
     }
   },
   "knowledge_graph": {

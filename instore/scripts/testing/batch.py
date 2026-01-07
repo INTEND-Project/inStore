@@ -134,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--compose", required=True)
     args = parser.parse_args()
     env_files = list(os.listdir("./environments"))
-    for env in ["env2.json", "env4.json", "env5.json"]:  # Edit here if needed
+    for env in ["env1.json", "env3.json"]:  #  Edit here if needed
         if args.category == "optimization":
             prompt_files = list(os.listdir("./optimization"))
             for prompt_file in prompt_files:

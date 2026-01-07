@@ -1,6 +1,6 @@
 {
-  "prompts": [],
-  "prompts_done": [
+  "prompts_done": [],
+  "prompts": [
     "13s :\"Move the lowest 3 accessed videos from Hot storage to cold storage on 1st March 2026.\"",
     "22s :\"The Madrid cache will be deleted and removed from the system on November 2026, ensure videos accessed there are available in Hot storage.\"",
     "21s :\"Reduce latency for users in Rome starting September 15, 2026.\"",

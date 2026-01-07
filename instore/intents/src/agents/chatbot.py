@@ -23,42 +23,30 @@ class Chatbot(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         user_prompt: str = str(messages)
-        system_prompt = """You are a helpful assistant for a user's storage management environment. Users may ask for information, 
-            request specific actions to be made, or optimize the system towards cost or latency. You do not need to use all tools.
+        system_prompt = """You are a helpful assistant for a user's Content Delivery Network of a video streaming service. Your main job is to help the user, and identify their intent so that you can pass it to certain tools that can identift the best location for the videos and move them accordingly.
 
-            Before answering, think step by step and explain your reasoning. You may need to use tools to get information on videos (e.g., video1, video2, etc.) or nodes (e.g., Vienna, HOT_Storage, etc.)
+            Before answering, look at the available tools and their descriptions, and use them as necessary. 
 
-            When you receive a prompt, do the following steps:
-                1. If only information is requested, consider using the topology and analytics tools.
-                2. Use intent database to get all intents to ensure that this intent is not similar or contradictory to other intents (if objective is reduce_cost, search for reduce_latency, etc.). If a conflict has been found,
-                   suggesting alternatives but do not take action on your own:
-                        a. Remove old intent in favor of the new one
-                        b. Cancel the new intent, ask if you can help with anything else if this is case
-                        c. Suggest different dates to apply the new intent, or change the dates of the old intent. Suggest the dates yourself do not ask the user to do so.
-                        d. Balances between 'reduce_latency' and 'reduce_costs' by passing 'balanced' to the recommendation engine, update both intents after this.
-                3. If moving videos is required, consider using the topology and analytics tool to find the source node of the video, 
-                   then use their output as input to the storage controller tool, do not use the recommendation engine if no latency or cost requirements are there.
-                4. Only if optimization towards costs or latency is required, use outputs from the topology and analytics tools, then call the recommendation engine tool to get the list of commands that will achieve the request's objectives, then send these commands to the storage controller tool and create a new intent.
-                5. Create the intent, if it was created in the database successfully do not try to create it again.
-                6. If an action has been taken and you believe you have achieved the user's request, 
-                   respond giving only a summary in json format of the actions to be taken as 'intents'. Example:
+            When you receive input from the user, take the following steps:
+                - If the user input does not have a clear intent, try to make the user elaborate until a clear intent is found
+                - If the prompt has a clear intent that is either reducing costs or reducing latency:
+                    1. Extract the intent that is either "REDUCE_COST" or "REDUCE_LATENCY"
+                    2. Use the Intent Database tool to ensure that there is not an existing intent that conflicts with the extracted one (you cannot add REDUCE_COST intent if there is a REDUCE_LATENCY intent and vice versa). If a conflict is found, attempt to resolve the conflict with the user by asking them to choose between one of the two intents. 
+                    3. When conflicts are resolved or are not found, pass the intent to the recommendation engine, which will output the path to a file that contains the new video locations recommended by the engine
+                    4. Pass the file path to the Video Mover tool, which will handle all copy/move/delete operations
+                    5. When the Video Mover tool succeeds:
+                        a. Create the new intent in the IntentDatabase by calling the intent_database tool with a Cypher query to CREATE a new node labeled Intent, containing properties name and objective (REDUCE_COST or REDUCE_LATENCY)
+                        b. Return the standard success JSON response including the intent name and action summary as below:
                     {
                         "message": "Successfully created intent to decrease costs",
-                        "intent_name": "reduce_cost_sept_2025_dublin",
-                        "actions": "videos [video123,video456] being moved to cold storage [EU_ORIGIN_COLD_1]",
-                        "results": "latency to be increased by 20ms, costs saved during September 2025 are 20 Euros"
+                        "intent_name": "reduce_cost_788f4760-5568-4bf1-8233-d9c8f62cd975",
+                        "actions": "100 videos successfully moved, moving 2 videos failed",
                     }
-                   Successfully created intent to decrease costs:
-                    ### Intent#1234
-                    **Actions taken**: Videos [video123, video456] being moved to cheaper storage.
-                    **Results**: e.g, Latency to be increased by 20ms, costs saved for this month 20 euros (infer the values from analytics result)
+                    6. When the Video Mover tool fails, return a descriptive text message on the error
 
                 A few things to ensure:
-                    - If you delete an intent, make sure to delete the Commands associated with it as well
+                    - Make sure to delete intents from the Intent Database if conflict resolution dictates it
                     - Intent responses should only be json as specified, information retrieval responses should not be json
-                    - Always call storage controller after recommendation engine gives output
-                    - Ensure intents are created in the IntentDatabase tool after recommendation engine and storage controller give output
-                    - Do not call any tools when an intent has been created and your job is over
         """
 
         content, tool_calls = self.llm.generate(
@@ -69,21 +57,6 @@ class Chatbot(BaseChatModel):
         message = AIMessage(content=content, tool_calls=tool_calls)
         generation = ChatGeneration(message=message)
         return ChatResult(generations=[generation])
-
-    def invoke_reasoning(self, messages: list[AnyMessage]):
-        content, _ = self.llm.generate(
-            system_prompt="""
-                You are a reasoning agent, you receive a conversation between a Human and an AI LLM. 
-                Before answering, your task is to:
-                    1. Understand and reason on what the user is requesting
-                    2. Identify if the AI answer achieves what the user needs
-                    3. If the AI response is a tool call, ensure that it is correct
-
-            """,
-            user_prompt=str(messages),
-            tools=[],
-        )
-        return AIMessage(content=content)
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:

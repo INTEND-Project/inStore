@@ -76,6 +76,6 @@ class Workflow:
         self.config = {"configurable": {"thread_id": id}}
         msg = HumanMessage(content=expression)
         msg.pretty_print()
-        return self.app.invoke({"messages": [msg], "reasoning": []}, self.config)
+        return self.app.invoke({"messages": [msg]}, self.config)
 
     # return self.app.invoke({"messages": [msg], "reasoning": []})

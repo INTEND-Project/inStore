@@ -16,9 +16,7 @@
     "1s :Move video18 to node Paris.",
     "28s :Clear cache Athens.",
     "10s :Delete video16 from cache node Amsterdam.",
-    "9s :Move video3 to node HOT_Storage."
-  ],
-  "prompts": [
+    "9s :Move video3 to node HOT_Storage.",
     "12s :Move video0 to node Berlin.",
     "8s :Delete video11 from cache node Paris.",
     "5s :Move video15 to node Berlin.",

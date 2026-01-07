@@ -8,17 +8,7 @@ from flask import Flask, Response, request
 from flask_cors import CORS
 from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
-from src.agents import (
-    AnalyticsTool,
-    Chatbot,
-    IntentConflictDetector,
-    IntentCreator,
-    IntentUpdater,
-    RecommendationEngine,
-    StorageController,
-    TopologyRetriever,
-    Workflow,
-)
+from src.agents import Chatbot, IntentDatabase, RecommendationEngine, VideoMover, Workflow
 from src.config import IntentManagerConfig
 
 from pkg.db import knowledge_graph_factory
@@ -30,45 +20,18 @@ def main(cfg_path: str):
     CORS(app)
 
     load_dotenv()
-    # environment = os.environ.get("ANALYTICS_ENV", default="6")
     cfg = IntentManagerConfig(cfg=load_config(cfg_path))
 
     llm = llm_factory(llm_info=cfg.llm_info)
 
     kg = knowledge_graph_factory(info=cfg.kg_info)
 
-    environment_file = open(f"./scripts/testing/environments/{os.environ.get('ANALYTICS_ENV')}")
-    environment = json.loads(environment_file.read())
-    analytics = AnalyticsTool(environment=environment)
-    intent_conflict_detector = IntentConflictDetector(knowledge_graph=kg)
     # TODO (Ali Amin): Use pre-determined cypher queries for intent creation
     tools: Sequence[BaseTool] = [
+        IntentDatabase(knowledge_graph=kg),
         RecommendationEngine(),
-        intent_conflict_detector,
-        IntentUpdater(knowledge_graph=kg),
-        TopologyRetriever(knowledge_graph=kg),
-        analytics,
-        StorageController(),
+        VideoMover(),
     ]
-    for n in [*environment["servers"], *environment["caches"]]:
-        if n["type"] == "origin":
-            kg.create_device(
-                device_name=n["name"],
-                device_type=n["type"],
-                max_capacity_gb=n["capacity_in_GB"],
-                allocated_capacity_gb=n["capacity_in_GB"] / 4,
-                backend="minio",
-                geolocation=n["location"].upper(),
-            )
-        else:
-            kg.create_device(
-                device_name=n["name"],
-                device_type=n["type"],
-                max_capacity_gb=n["capacity_in_GB"],
-                allocated_capacity_gb=n["capacity_in_GB"] / 4,
-                backend="minio",
-                geolocation=n["name"].split("_")[0].upper(),
-            )
 
     chatbot = Chatbot(llm=llm, tools=tools)
     w = Workflow(chatbot=chatbot, tools=tools)
@@ -78,20 +41,13 @@ def main(cfg_path: str):
         j = request.get_json()
         res = w.run(j)
         tool_calls = []
-        cmds = []
         for msg in res["messages"]:
             if isinstance(msg, AIMessage) and msg.tool_calls is not None and len(msg.tool_calls) > 0:
                 for call in msg.tool_calls:
                     tool_calls.append(call["name"])
-                    if call["name"] == "StorageController":
-                        if "StorageController" in tool_calls:
-                            cmds = [call["args"]]
-                        else:
-                            cmds.append(call["args"])
 
         response = json.dumps(
             {
-                "cmds": cmds,
                 "tool_calls": tool_calls,
                 "reply": res["messages"][-1].content,
             }

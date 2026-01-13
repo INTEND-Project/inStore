@@ -1,7 +1,8 @@
 import argparse
 import json
-import os
-from typing import Any, Sequence
+import queue
+import threading
+from typing import Sequence
 
 from dotenv import load_dotenv
 from flask import Flask, Response, request
@@ -34,26 +35,43 @@ def main(cfg_path: str):
     ]
 
     chatbot = Chatbot(llm=llm, tools=tools)
-    w = Workflow(chatbot=chatbot, tools=tools)
 
     @app.route("/intent", methods=["POST"])
+# {"expression": "Hello world", "id": <uuid>}   
     def add_new_intent():
-        j = request.get_json()
-        res = w.run(j)
-        tool_calls = []
-        for msg in res["messages"]:
-            if isinstance(msg, AIMessage) and msg.tool_calls is not None and len(msg.tool_calls) > 0:
-                for call in msg.tool_calls:
-                    tool_calls.append(call["name"])
+        notify_queue = queue.Queue()
 
-        response = json.dumps(
-            {
-                "tool_calls": tool_calls,
-                "reply": res["messages"][-1].content,
-            }
-        )
+        request_data = request.get_json()
 
-        return Response(status=200, response=response)
+        def _on_tool_call(tool_message: str):
+            notification = {"type": "tool_call", "message": tool_message}
+            notify_queue.put(json.dumps(notification))
+
+        def generate():
+            workflow_result = {}
+
+            def run_workflow(data):
+                try:
+                    w = Workflow(chatbot=chatbot, tools=tools, on_tool_callback=_on_tool_call)
+                    res = w.run(data)
+                    workflow_result["final"] = {"type": "response", "reply": res["messages"][-1].content}
+                except Exception as e:
+                    workflow_result["final"] = {"type": "error", "message": str(e)}
+                finally:
+                    notify_queue.put(None)  # Signal completion
+
+            thread = threading.Thread(target=run_workflow, args=(request_data,))
+            thread.start()
+
+            while True:
+                msg = notify_queue.get()
+                if msg is None:
+                    if "final" in workflow_result:
+                        yield f"data: {json.dumps(workflow_result['final'])}\n\n"
+                    break
+                yield f"data: {msg}\n\n"
+
+        return Response(generate(), mimetype="text/event-stream")
 
     @app.route("/intent", methods=["GET"])
     def get_intents():
@@ -65,6 +83,7 @@ def main(cfg_path: str):
         res = kg.get_intent(name)
         return Response(status=200, response=json.dumps(res))
 
+    # Doesn't work properly
     @app.route("/device/<name>", methods=["GET"])
     def get_device(name: str):
         res = kg.get_device(name)

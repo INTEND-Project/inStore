@@ -1,5 +1,6 @@
-import uuid
-from typing import Annotated, Any, Literal, Sequence, TypedDict
+from threading import Thread
+from time import sleep
+from typing import Annotated, Any, Callable, Literal, Sequence, TypedDict
 
 from langchain_core.messages import AnyMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
@@ -27,10 +28,12 @@ class Workflow:
     config: RunnableConfig
     tools: Sequence[BaseTool]
     chatbot: Chatbot
+    on_tool_callback: Callable[[str], None]
 
-    def __init__(self, chatbot: Chatbot, tools: Sequence[BaseTool]):
+    def __init__(self, chatbot: Chatbot, tools: Sequence[BaseTool], on_tool_callback: Callable[[str], None]):
         self.chatbot = chatbot
         self.tools = tools
+        self.on_tool_callback = on_tool_callback
 
         workflow = StateGraph(State)
         workflow.add_node("agent", self.__call_chatbot)
@@ -44,18 +47,30 @@ class Workflow:
 
         # self.app = workflow.compile()
 
+    def _notify_progress(self, tool_call: dict[str, str]):
+        if tool_call["name"] == "intent_database":
+            if "CREATE" in tool_call["args"]["cypher_query"]:
+                self.on_tool_callback("Creating a new intent")
+            else:
+                self.on_tool_callback("Searching the intent database")
+
+        elif tool_call["name"] == "recommendation_engine":
+            self.on_tool_callback("Computing optimal placement of videos")
+        elif tool_call["name"] == "video_mover":
+            self.on_tool_callback("Preparing origin storage and cache nodes")
+            sleep(1)
+            self.on_tool_callback("Moving videos between hot and cold storage")
+            sleep(1)
+            self.on_tool_callback("Copying videos to cache nodes")
+
     def __call_chatbot(self, state: State):
         messages = state["messages"]
         response = self.chatbot.invoke(messages)
         response.pretty_print()
-        return {"messages": [*messages, response], "reasoning": state["reasoning"]}
-
-    def __call_reasoning(self, state: State):
-        messages = state["messages"]
-        reasoning_msg = self.chatbot.invoke_reasoning(messages)
-        print("____________REASONING_____________")
-        reasoning_msg.pretty_print()
-        return {"messages": messages, "reasoning": [reasoning_msg.content]}
+        if response.tool_calls is not None and len(response.tool_calls) > 0:
+            thread = Thread(target=self._notify_progress, args=(response.tool_calls[0],))
+            thread.start()
+        return {"messages": [response]}
 
     def __route_model_output(self, state: State) -> Literal["__end__", "tools", "agent"]:
         last_message = state["messages"][-1]

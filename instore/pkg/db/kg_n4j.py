@@ -80,27 +80,8 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
             intent_name = data["i"]["name"]
             if intent_name not in intents:
                 intents[intent_name] = {
-                    "from": data["i"]["from"],
-                    "to": data["i"].get("to", "never"),
                     "objective": data["i"]["objective"],
-                    "commands": [],
                 }
-
-            intent_commands: list[dict[str, str]] = intents[intent_name]["commands"]
-            command = {}
-
-            if data["c"] is not None:
-                command = {
-                    "date_time": data["c"]["date_time"],
-                    "content_id": data["c"]["content_id"],
-                    "destination": data["c"].get("destination", "none"),
-                    "source": data["c"]["source"],
-                    "cmd": data["c"]["cmd"],
-                }
-                if command not in intent_commands:
-                    intent_commands.append(command)
-
-                intents[intent_name]["commands"] = intent_commands
 
         intent_list = []
         for k, v in intents.items():

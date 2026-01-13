@@ -18,6 +18,7 @@ interface Message {
 
 function App() {
   const [page, setPage] = useState<String>("messages");
+  const [notifications, setNotifications] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "instore",
@@ -34,16 +35,21 @@ function App() {
     ];
     setMessages(newMessages);
     try {
-      const res = await submitQuery(newMessage);
-      setMessages([
-        ...newMessages,
-        {
-          sender: "instore",
-          content: res["reply"],
-          tool_calls: res["tool_calls"],
-          commands: res["cmds"],
+      await submitQuery(
+        newMessage,
+        (msg) => {
+          setNotifications((n) => [...n, msg]);
         },
-      ]);
+        (msg) => {
+          setMessages([
+            ...newMessages,
+            {
+              sender: "instore",
+              content: msg,
+            },
+          ]);
+        },
+      );
       setLoading(false);
       return true;
     } catch (e) {
@@ -63,7 +69,11 @@ function App() {
       return (
         <>
           <Box paddingBottom="200px" marginLeft="300px">
-            <ChatMessages messages={messages} loading={loading} />
+            <ChatMessages
+              messages={messages}
+              notifications={notifications}
+              loading={loading}
+            />
           </Box>
           <ChatbotInput onSubmit={submit} loading={loading} />
         </>

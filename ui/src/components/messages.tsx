@@ -1,55 +1,164 @@
-import { Avatar, Card, Flex, HStack, Skeleton, Stack } from "@chakra-ui/react";
-import { useEffect, useRef } from "react";
-import { TbChartBubbleFilled } from "react-icons/tb";
+import {
+  Avatar,
+  Box,
+  Card,
+  Flex,
+  HStack,
+  Spinner,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
+import {
+  TbChartBubbleFilled,
+  TbCheck,
+  TbChevronDown,
+  TbChevronUp,
+  TbListSearch,
+} from "react-icons/tb";
+import { motion, AnimatePresence } from "framer-motion";
 import Markdown from "react-markdown";
 
 type Message = {
   sender: "human" | "instore";
   content: string;
-  tool_calls?: string[];
-  commands?: string[];
   failed?: boolean;
 };
 interface ChatMessagesProps {
   messages: Message[];
+  notifications: string[];
   loading: boolean;
 }
 
 export function ChatMessages(props: ChatMessagesProps) {
   const bottomRef = useRef<null | HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  // Auto-expand when loading starts to show live progress
+  useEffect(() => {
+    if (props.loading) {
+      setIsExpanded(true);
+    }
+  }, [props.loading]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  });
-  //TODO: Change key prop from content to id
+  }, [props.messages, props.notifications, props.loading, isExpanded]);
+
   return (
-    <div style={{ fontFamily: "Roboto" }}>
-      {props.messages.map((m, i) => {
-        let messageComponent;
-        if (m.sender === "human") {
-          messageComponent = <HumanMessage message={m} />;
-        } else {
-          messageComponent = <AgentMessage message={m.content} />;
-        }
-        if (i + 1 === props.messages.length) {
-          return <div ref={bottomRef}>{messageComponent}</div>;
-        } else {
-          return messageComponent;
-        }
-      })}
-      {props.loading ? (
-        <HStack gap="5">
-          <Avatar.Root size="2xl" backgroundColor="#0077DE">
-            <TbChartBubbleFilled color="white" size={28} />
-          </Avatar.Root>
-          <Stack flex="1">
-            <Skeleton height="8" width="1000px" />
-            <Skeleton height="8" width="500px" />
+    <div style={{ fontFamily: "Roboto", paddingBottom: "40px" }}>
+      {props.messages.map((m, i) => (
+        <div key={i}>
+          {m.sender === "human" ? (
+            <HumanMessage message={m} />
+          ) : (
+            <AgentMessage message={m.content} />
+          )}
+        </div>
+      ))}
+
+      {(props.notifications.length > 0 || props.loading) && (
+        <Flex direction="row" gap="5" mt="6" align="flex-start">
+          <Stack align="center" gap="0">
+            <Avatar.Root
+              size="2xl"
+              backgroundColor={props.loading ? "#0077DE" : "gray.100"}
+            >
+              {props.loading ? (
+                <TbChartBubbleFilled color="white" size={28} />
+              ) : (
+                <TbListSearch color="gray.500" size={24} />
+              )}
+            </Avatar.Root>
+            <Box width="2px" flex="1" bg="gray.100" my="2" minHeight="20px" />
           </Stack>
-        </HStack>
-      ) : (
-        <div />
+
+          <Stack flex="1" gap="2">
+            <HStack justify="space-between" width="full" pr="4">
+              <Text
+                fontSize="xs"
+                fontWeight="bold"
+                color="gray.400"
+                letterSpacing="widest"
+                textTransform="uppercase"
+              >
+                {props.loading ? "InStorage Processing..." : "Execution Log"}
+              </Text>
+
+              {/* Toggle Button */}
+              <HStack
+                as="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                color="blue.500"
+                _hover={{ color: "blue.700" }}
+                cursor="pointer"
+                gap="1"
+              >
+                <Text fontSize="xs" fontWeight="bold">
+                  {isExpanded ? "HIDE" : `SHOW (${props.notifications.length})`}
+                </Text>
+                {isExpanded ? (
+                  <TbChevronUp size={14} />
+                ) : (
+                  <TbChevronDown size={14} />
+                )}
+              </HStack>
+            </HStack>
+
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <Box
+                    bg="gray.50"
+                    p="4"
+                    borderRadius="lg"
+                    borderWidth="1px"
+                    borderColor="gray.100"
+                  >
+                    <AnimatePresence>
+                      {props.notifications.map((note, index) => {
+                        const isLast = index === props.notifications.length - 1;
+                        const isCurrentAction = isLast && props.loading;
+                        return (
+                          <motion.div
+                            layout
+                            key={note + index}
+                            initial={{ opacity: 0, x: -5 }}
+                            animate={{
+                              opacity: isCurrentAction ? 1 : 0.6,
+                              x: 0,
+                              color: isCurrentAction ? "#0077DE" : "#4A5568",
+                            }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <HStack gap="3" py="1">
+                              {isCurrentAction ? (
+                                <Spinner size="xs" color="#0077DE" />
+                              ) : (
+                                <TbCheck size={14} color="green" />
+                              )}
+                              <Text fontSize="sm" fontFamily="monospace">
+                                {note}
+                              </Text>
+                            </HStack>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </Box>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Stack>
+        </Flex>
       )}
+
+      <div ref={bottomRef} />
     </div>
   );
 }
@@ -117,8 +226,7 @@ const AgentMessage = (props: { message: string }) => {
     if (intent) {
       return (
         <div>
-          {intent.message}
-          {":"}
+          <Markdown>{intent.message}</Markdown>
           <Card.Root
             style={{
               padding: "12px",
@@ -147,21 +255,12 @@ const AgentMessage = (props: { message: string }) => {
               >
                 Actions: {intent["actions"]}
               </div>
-              <div
-                style={{
-                  paddingLeft: "8px",
-                  fontSize: "16px",
-                  fontWeight: "lighter",
-                }}
-              >
-                Results: {intent["results"]}
-              </div>
             </Card.Body>
           </Card.Root>
         </div>
       );
     } else {
-      return msg;
+      return <Markdown>{msg}</Markdown>;
     }
   };
 

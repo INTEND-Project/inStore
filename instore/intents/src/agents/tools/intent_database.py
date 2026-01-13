@@ -13,7 +13,7 @@ class IntentDatabaseInput(BaseModel):
 
 
 class IntentDatabase(BaseTool):
-    name: str = "IntentDatabase"
+    name: str = "intent_database"
     description: str = """
     Neo4j intent database. Use this to read, add, or delete. The following is the schema of the intent vertix (the only one): 
         (i: Intent {name: "reduce_latency_788f4760-5568-4bf1-8233-d9c8f62cd975", "objective": "REDUCE_LATENCY"})
@@ -24,6 +24,5 @@ class IntentDatabase(BaseTool):
 
     def _run(self, cypher_query: str, run_manager: Optional[CallbackManagerForToolRun] = None):
         records, _, __ = self.knowledge_graph.execute_query(cypher_query)
-        print(records)
         pretty_print(f"Successfully ran intent database query: {cypher_query}", "Tool Message (Intent Database)")
         return records

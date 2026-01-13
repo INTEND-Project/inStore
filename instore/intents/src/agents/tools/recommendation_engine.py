@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 from pkg.utils.pretty_print import pretty_print
 
+from .recommend import plan
+
 
 class RecommendationEngineInput(BaseModel):
     intent: str = Field(description='The intent or objective to achieve, can be "REDUCE_COST" or "REDUCE_LATENCY"')
@@ -22,4 +24,5 @@ class RecommendationEngine(BaseTool):
     def _run(self, intent: str):
         csv_file_path = "/root/recommendations.csv"
         pretty_print(f"CSV File Path: '{csv_file_path}'", "Tool Message (Recommendation Engine)")
+        plan(mode=intent, out_csv=csv_file_path)
         return f"CSV File Path: '{csv_file_path}'"

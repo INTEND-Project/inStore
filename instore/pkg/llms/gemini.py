@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Sequence
 from uuid import uuid4
 
 import requests
+from google import genai
+from google.genai import types
 from langchain_core.tools import BaseTool
 from requests.models import HTTPError
 
@@ -19,36 +21,29 @@ class GeminiLLM(LLM):
     def generate(
         self, system_prompt: str, user_prompt: str, tools: Sequence[BaseTool]
     ) -> tuple[str, List[Dict[str, Any]]]:
+        api_key = os.environ.get("GEMINI_API_KEY")
         data = {
-            "contents": {
-                "role": "user",
-                "parts": {
-                    "text": user_prompt,
-                },
-            },
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": user_prompt}],
+                }
+            ],
             "system_instruction": {
-                "parts": [
-                    {
-                        "text": system_prompt,
-                    },
-                ],
+                "parts": [{"text": system_prompt}],
             },
             "tools": [{"functionDeclarations": self._parameters_from_tools(tools)}],
-            "generationConfig": {
-                "temperature": 0.1,
-            },
         }
 
-        headers = {"Content-Type": "application/json"}
-
+        headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
         try:
-            api_key = os.environ.get("GEMINI_API_KEY")
             response = requests.post(
-                url=f"{self.llm_config.endpoint}/{self.llm_config.model_name}:generateContent?key={api_key}",
+                url=self.llm_config.endpoint,
                 json=data,
                 headers=headers,
-                timeout=10000,
+                timeout=60,
             )
+            print("done")
 
             response.raise_for_status()
 

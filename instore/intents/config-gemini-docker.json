@@ -3,9 +3,9 @@
   "llm_info": {
     "provider": "gemini",
     "config": {
-      "model_name": "gemini-2.5-flash",
-      "model_name_pretty": "Gemini 2.5 Flash",
-      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models"
+      "model_name": "",
+      "model_name_pretty": "Gemini 3 Flash",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent"
     }
   },
   "knowledge_graph": {

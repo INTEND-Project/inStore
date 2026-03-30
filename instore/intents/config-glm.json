@@ -1,0 +1,17 @@
+{
+  "port": 5001,
+  "llm_info": {
+    "provider": "vllm",
+    "config": {
+      "model_name": "QuantTrio/GLM-4.7-AWQ",
+      "model_name_pretty": "GLM-4.7-AWQ",
+      "endpoint": "http://10.60.26.10:8001/v1/chat/completions"
+    }
+  },
+  "knowledge_graph": {
+    "provider": "neo4j",
+    "config": {
+      "url": "bolt://localhost:7687"
+    }
+  }
+}

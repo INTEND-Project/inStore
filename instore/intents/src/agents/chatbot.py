@@ -40,7 +40,7 @@ class Chatbot(BaseChatModel):
                     {
                         "message": "Successfully created intent to decrease costs",
                         "intent_name": "reduce_cost_788f4760-5568-4bf1-8233-d9c8f62cd975",
-                        "actions": "100 videos successfully moved, moving 2 videos failed",
+                        "actions": "100 videos successfully moved, moving 2 videos failed"
                     }
                     6. When the Video Mover tool fails, return a descriptive text message on the error
 

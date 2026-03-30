@@ -58,7 +58,7 @@ class VideoMover(BaseTool):
         source_node = row[1].strip()
         destination_node = row[2].strip()
 
-        api_base_url = "http://10.13.14.1:30070"
+        api_base_url = os.environ.get("MOG_API_URL")
         should_purge = destination_node is None or destination_node == ""
         is_source_origin = "hot" in source_node or "cold" in source_node
         is_destination_origin = "hot" in destination_node or "cold" in destination_node

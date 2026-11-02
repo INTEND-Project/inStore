@@ -8,4 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5001
 
-CMD ["python", "-u", "intents/intent_manager.py", "--cfg=./intents/config-docker.json"]
+# Default config file, kept in sync with the INSTORE_CONFIG default in docker-compose.yaml
+ENV INSTORE_CONFIG=./intents/config-docker.json
+
+CMD ["python", "-u", "intents/intent_manager.py"]

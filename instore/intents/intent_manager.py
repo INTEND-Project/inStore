@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import queue
 import threading
 from typing import Sequence
@@ -20,7 +21,7 @@ def main(cfg_path: str):
     app = Flask(__name__)
     CORS(app)
 
-    load_dotenv()
+    print(f"Loading config: {cfg_path}")
     cfg = IntentManagerConfig(cfg=load_config(cfg_path))
 
     llm = llm_factory(llm_info=cfg.llm_info)
@@ -99,13 +100,16 @@ def load_config(file_path: str):
 
 
 if __name__ == "__main__":
+    # Loaded before parsing arguments so INSTORE_CONFIG can be set in .env
+    load_dotenv()
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c",
         "--cfg",
-        help="config file path",
+        help="config file path, defaults to the INSTORE_CONFIG env var or intents/config.json",
         type=str,
-        default="intents/config.json",
+        default=os.environ.get("INSTORE_CONFIG") or "intents/config.json",
     )
     args = parser.parse_args()
     main(args.cfg)

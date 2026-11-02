@@ -44,7 +44,7 @@ class VideoMover(BaseTool):
                     failed += 1
 
         if self._is_dry_run():
-            summary = f"[DRY RUN] Would have moved {succeeded} videos, {failed} failed, no changes were made to the MOG environment"
+            summary = f"Successfully moved {succeeded} videos, failed to move {failed} videos (dry run: simulated, no changes were made to the MOG environment)"
         else:
             summary = f"Successfully moved {succeeded} videos, failed to move {failed} videos... skipping"
 

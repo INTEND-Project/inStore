@@ -34,16 +34,27 @@ The graph-based knowledge store that contains the intent inventory, the storage 
 
 ## How to run
 
-The easiest way to get a version running is to run the docker-compose.yaml file in `./instore/docker-compose.yaml`. This setup was tested with `Docker Compose version v2.29.7`.
+The easiest way to get a version running is to run the docker-compose.yaml file in `./instore/docker-compose.yaml`.
 
 First, create a `.env` file which includes LLM API keys, Neo4j auth username and passwords, and API endpoints.
 
 ```bash
-cp ./instore/.env-example ./instore/.env-example
-vi ./instore/.env # or use vscode/nano to edit the file but I will be personally upset
+cp ./instore/.env-example ./instore/.env
+vi ./instore/.env
 ```
 
-Then run the docker compose up command, by default this will use **Gemini 3 Flash** as the LLM backend. However, we tailored inStore to use a locally hosted **GLM 4.7 Thinking** so other models may behave differently. This command will run both Neo4j and the Python application for inStore
+Next, choose the LLM backend by pointing `INSTORE_CONFIG` in `.env` to one of the config files in `./instore/intents/`, for example:
+
+```bash
+INSTORE_CONFIG=./intents/config-gemini-docker.json  # Gemini 3 Flash, requires GEMINI_API_KEY
+INSTORE_CONFIG=./intents/config-octo.json           # OCTO EU LLM served by vLLM
+```
+
+Each config file contains the LLM provider, endpoint, and model name. To use your own OpenAI-compatible server (e.g., vLLM), copy one of the `vllm` config files and change its `endpoint` and `model_name`. When `INSTORE_CONFIG` is not set, Docker uses `./intents/config-docker.json`.
+
+If the MOG API is not reachable, set `MOG_DRY_RUN=true` in `.env`. The recommendation engine then plans against mock video data and the video mover logs the actions it would take instead of calling the MOG API.
+
+Then run the docker compose up command. This command will run both Neo4j and the Python application for inStore
 
 ```bash
 cd instore
@@ -57,6 +68,7 @@ At this point, you will have inStore and the intend database (Neo4j) running. To
 
 ```bash
 cd ./ui
+cp .env-example .env # points the UI to the intent manager at http://localhost:5001
 
 npm install && npm run dev
 ```

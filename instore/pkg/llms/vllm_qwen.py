@@ -1,3 +1,5 @@
+# Not wired into the LLM factory. Requires `pip install vllm==0.11.2` (no longer in requirements.txt)
+# for the client-side Qwen3-Coder tool call parser.
 import json
 import os
 from typing import Any, Dict, List, Optional, Sequence

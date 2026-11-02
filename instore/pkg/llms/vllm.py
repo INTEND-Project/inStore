@@ -4,16 +4,11 @@ from typing import Any, Dict, List, Optional, Sequence
 from uuid import uuid4
 
 import requests
-from langchain_core.messages.tool import tool_call
 from langchain_core.tools import BaseTool
 from requests.models import HTTPError
-from transformers import AutoTokenizer
-from vllm import LLM, sampling_params
-from vllm.entrypoints.openai.protocol import ChatCompletionRequest
 
 from pkg.config import VLLMConfig
 from pkg.interfaces.llm import LLM
-from pkg.llms.qwen3coder_tool_parser import Qwen3CoderToolParser
 
 
 class VLLM(LLM):

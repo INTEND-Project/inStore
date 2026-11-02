@@ -80,18 +80,17 @@ class VLLM(LLM):
             response.raise_for_status()
             reply = response.json()["choices"][0]["message"]
 
-            content = reply["content"]
+            # Some vLLM servers omit tool_calls when no tool is called, and send null content alongside tool calls
+            content = reply.get("content") or ""
             tool_calls = []
-            tcs = reply["tool_calls"]
-            if tcs is not None:
-                for tc in tcs:
-                    tool_calls.append(
-                        {
-                            "name": tc["function"]["name"],
-                            "args": json.loads(tc["function"]["arguments"]),
-                            "id": tc["id"],
-                        }
-                    )
+            for tc in reply.get("tool_calls") or []:
+                tool_calls.append(
+                    {
+                        "name": tc["function"]["name"],
+                        "args": json.loads(tc["function"]["arguments"]),
+                        "id": tc["id"],
+                    }
+                )
             print(reply)
             return (
                 content,
@@ -101,9 +100,6 @@ class VLLM(LLM):
         except requests.exceptions.HTTPError as err:
             print(err)
             raise HTTPError() from err
-        except Exception as err:
-            print(err)
-            return err, []
 
     def get_model(self) -> str:
         return self.llm_config.model_name_pretty

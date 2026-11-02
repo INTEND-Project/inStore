@@ -41,7 +41,7 @@ class VLLM(LLM):
         if os.environ.get("VLLM_MODEL_NAME") is not None:
             model_name = os.environ.get("VLLM_MODEL_NAME")
         if os.environ.get("VLLM_ENDPOINT") is not None:
-            vllm_url = self.llm_config.endpoint
+            vllm_url = os.environ.get("VLLM_ENDPOINT")
         data = {
             "model": model_name,
             "temperature": 0.6,

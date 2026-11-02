@@ -38,10 +38,6 @@ class VLLM(LLM):
     ) -> tuple[str, List[Dict[str, Any]]]:
         model_name = self.llm_config.model_name
         vllm_url = self.llm_config.endpoint
-        if os.environ.get("VLLM_MODEL_NAME") is not None:
-            model_name = os.environ.get("VLLM_MODEL_NAME")
-        if os.environ.get("VLLM_ENDPOINT") is not None:
-            vllm_url = os.environ.get("VLLM_ENDPOINT")
         data = {
             "model": model_name,
             "temperature": 0.6,

@@ -9,8 +9,6 @@ services:
       # Config file selection, default kept in sync with the Dockerfile ENV
       INSTORE_CONFIG: ${INSTORE_CONFIG:-./intents/config-docker.json}
       # LLM backends
-      VLLM_ENDPOINT:
-      VLLM_MODEL_NAME:
       NT_BEARER_TOKEN:
       GEMINI_API_KEY:
       # Intent database

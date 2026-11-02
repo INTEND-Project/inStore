@@ -1,7 +1,7 @@
 import requests
 import csv
 import hashlib
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 REGION_CAPACITY_MB: Dict[str, int] = {
     "us-east-1": 50_000,       # 50 GB
@@ -74,9 +74,10 @@ def write_csv_no_header(rows: List[Tuple[str, str, str]], path: str) -> None:
         for key, src, dst in rows:
             w.writerow([key, src, dst])
             
-def plan(mode: str, base_url: str = "http://10.13.14.1:30070/videos", out_csv: str = "actions.csv"):
-    
-    videos = fetch_all_videos(base_url)
+def plan(mode: str, base_url: str = "http://10.13.14.1:30070/videos", out_csv: str = "actions.csv", videos: Optional[List[dict]] = None):
+
+    if videos is None:
+        videos = fetch_all_videos(base_url)
     
     size_by_key: Dict[str, int] = {v["key"]: fake_size_mb(v["key"]) for v in videos}
     

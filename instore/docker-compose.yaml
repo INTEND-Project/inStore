@@ -6,7 +6,17 @@ services:
     depends_on:
       - neo4j
     environment:
-      ANALYTICS_ENV: ${ANALYTICS_ENV}
+      # LLM backends
+      VLLM_ENDPOINT:
+      VLLM_MODEL_NAME:
+      NT_BEARER_TOKEN:
+      GEMINI_API_KEY:
+      # Intent database
+      KNOWLEDGE_GRAPH_NEO4J_USERNAME:
+      KNOWLEDGE_GRAPH_NEO4J_PASSWORD:
+      # MOG API
+      MOG_API_URL:
+      MOG_DRY_RUN:
 
   neo4j:
     image: neo4j

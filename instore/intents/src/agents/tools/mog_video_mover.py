@@ -43,11 +43,16 @@ class VideoMover(BaseTool):
                     pretty_print(e, "Tool Message (Video Mover)")
                     failed += 1
 
-        pretty_print(
-            f"Successfully moved {succeeded} videos, failed to move {failed} videos... skipping",
-            title="Tool Message (Video Mover)",
-        )
-        return f"Successfully moved {succeeded} videos, failed to move {failed} videos... skipping"
+        if self._is_dry_run():
+            summary = f"[DRY RUN] Would have moved {succeeded} videos, {failed} failed, no changes were made to the MOG environment"
+        else:
+            summary = f"Successfully moved {succeeded} videos, failed to move {failed} videos... skipping"
+
+        pretty_print(summary, title="Tool Message (Video Mover)")
+        return summary
+
+    def _is_dry_run(self) -> bool:
+        return os.environ.get("MOG_DRY_RUN", "").lower() in ("true", "1")
 
     def _process_row(self, row):
         """Process a single row from the CSV file."""
@@ -63,26 +68,37 @@ class VideoMover(BaseTool):
         is_source_origin = "hot" in source_node or "cold" in source_node
         is_destination_origin = "hot" in destination_node or "cold" in destination_node
 
-        if should_purge:  # purge
+        if should_purge:
+            action = "purge"
+        elif is_source_origin and is_destination_origin:
+            action = "move"
+        elif is_source_origin:
+            action = "copy"
+        else:
+            raise Exception("Unknown movement case")
+
+        if self._is_dry_run():
+            print(f"[DRY RUN] {action} {video_id}: {source_node} -> {destination_node or '(purged)'}")
+            return
+
+        if action == "purge":
             requests.post(
                 f"{api_base_url}/files/purge",
                 {"file": video_id, "region": source_node},
                 timeout=10,
             )
-        elif is_source_origin and is_destination_origin:  # move
+        elif action == "move":
             requests.post(
                 f"{api_base_url}/files/move",
                 {"file": video_id, "destination": destination_node, "source": source_node},
                 timeout=10,
             )
-        elif is_source_origin:  # copy
+        elif action == "copy":
             requests.get(
                 f"{api_base_url}/files/copy",
                 {"region": destination_node, "file": video_id},
                 timeout=10,
             )
-        else:
-            raise Exception("Unknown movement case")
 
     async def _arun(self, csv_file_path: str) -> str:
         """Async version of the tool."""

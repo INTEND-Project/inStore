@@ -1,3 +1,4 @@
+import os
 from datetime import date
 from typing import Optional
 
@@ -22,7 +23,11 @@ class RecommendationEngine(BaseTool):
     )
 
     def _run(self, intent: str):
+        api_base_url = os.environ.get("MOG_API_URL")
+        if not api_base_url:
+            raise ValueError("MOG_API_URL is not set")
+
         csv_file_path = "/root/recommendations.csv"
         pretty_print(f"CSV File Path: '{csv_file_path}'", "Tool Message (Recommendation Engine)")
-        plan(mode=intent, out_csv=csv_file_path)
+        plan(mode=intent, base_url=f"{api_base_url}/videos", out_csv=csv_file_path)
         return f"CSV File Path: '{csv_file_path}'"

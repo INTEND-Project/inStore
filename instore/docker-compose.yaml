@@ -12,6 +12,7 @@ services:
       NT_BEARER_TOKEN:
       GEMINI_API_KEY:
       # Intent database
+      KNOWLEDGE_GRAPH_NEO4J_URL: bolt://neo4j:7687
       KNOWLEDGE_GRAPH_NEO4J_USERNAME:
       KNOWLEDGE_GRAPH_NEO4J_PASSWORD:
       # MOG API

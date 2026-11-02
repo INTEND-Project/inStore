@@ -14,7 +14,7 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
     driver: Driver
 
     def __init__(self, cfg: Neo4jKnowledgeGraphConfig):
-        self.url = cfg.url
+        self.url = os.environ.get("KNOWLEDGE_GRAPH_NEO4J_URL") or cfg.url
         self.driver = GraphDatabase.driver(
             self.url,
             auth=(

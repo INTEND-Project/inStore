@@ -3,8 +3,6 @@ from typing import Any, Dict, List, Sequence
 from uuid import uuid4
 
 import requests
-from google import genai
-from google.genai import types
 from langchain_core.tools import BaseTool
 from requests.models import HTTPError
 

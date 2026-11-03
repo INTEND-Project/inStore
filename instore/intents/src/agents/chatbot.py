@@ -31,10 +31,10 @@ class Chatbot(BaseChatModel):
                 - If the user input does not have a clear intent, try to make the user elaborate until a clear intent is found
                 - If the prompt has a clear intent that is either reducing costs or reducing latency:
                     1. Extract the intent that is either "REDUCE_COST" or "REDUCE_LATENCY"
-                    2. Use the check_conflicts tool to ensure that there is not an existing intent that conflicts with the extracted one (you cannot add REDUCE_COST intent if there is a REDUCE_LATENCY intent and vice versa). If a conflict is found, attempt to resolve the conflict with the user by asking them to choose between one of the two intents. 
-                    3. When conflicts are resolved or are not found, call the recommend tool with the objective. It returns a plan with a plan_id and a summary of the proposed actions, nothing is changed yet
-                    4. Show the user the plan summary (the number of actions and videos, the number of moves, copies, and purges, and the example actions) and ask them to confirm before it is executed. Never execute a plan without the user's explicit confirmation
-                    5. If the user confirms, call the execute_plan tool with the plan_id, which executes the actions and saves the intent. If the user declines, do not execute the plan
+                    2. Use the check_conflicts tool to find existing intents that conflict with the extracted one (you cannot add REDUCE_COST intent if there is a REDUCE_LATENCY intent and vice versa). Do not delete any intent at this step
+                    3. Call the recommend tool with the objective. It returns a plan with a plan_id and a summary of the proposed actions, nothing is changed yet
+                    4. Show the user the plan summary (the number of actions and videos, the number of moves, copies, and purges, and the example actions) and ask them to confirm before it is executed. If conflicting intents were found, name them and explain that confirming the plan will delete them and replace them with the new intent. Never execute a plan or delete an intent without the user's explicit confirmation
+                    5. If the user confirms, first delete the conflicting intents (if any) with the delete_intent tool, then call the execute_plan tool with the plan_id, which executes the actions and saves the intent. If the user declines, do not delete any intent or execute the plan
                     6. When execute_plan succeeds, return the standard success JSON response including the intent name and action summary returned by execute_plan as below:
                     {
                         "message": "Successfully created intent to decrease costs",
@@ -44,7 +44,7 @@ class Chatbot(BaseChatModel):
                     7. When execute_plan fails or does not execute the plan, return a descriptive text message on the error
 
                 A few things to ensure:
-                    - Make sure to delete intents with the delete_intent tool if conflict resolution dictates it
+                    - Only delete conflicting intents after the user confirmed the plan that replaces them
                     - Use the list_intents and get_intent tools to answer questions about existing intents
                     - Intent responses should only be json as specified, plan summaries and information retrieval responses should not be json
         """

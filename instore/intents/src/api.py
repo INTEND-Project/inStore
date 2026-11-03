@@ -1,3 +1,4 @@
+import hmac
 import json
 import queue
 import threading
@@ -13,6 +14,7 @@ from .plans import Plan
 from .service import IntentService
 
 API_PREFIX = "/api/v1"
+API_KEY_HEADER = "X-API-Key"
 
 # Runs one conversation turn: (conversation_id, message, on_tool_call) -> reply
 RunConversation = Callable[[str, str, Callable[[str], None]], str]
@@ -45,9 +47,12 @@ def stream_conversation(run_conversation: RunConversation, conversation_id: str,
         yield f"data: {json.dumps(event)}\n\n"
 
 
-def create_app(service: IntentService, run_conversation: RunConversation) -> Flask:
+def create_app(service: IntentService, run_conversation: RunConversation, api_key: Optional[str] = None) -> Flask:
+    """Creates the intent manager app. When api_key is set, every route except the health check requires it."""
     app = Flask(__name__)
     CORS(app)
+    if api_key:
+        _require_api_key(app, api_key)
     app.register_blueprint(_api_v1(service, run_conversation), url_prefix=API_PREFIX)
     _register_error_handlers(app)
     _register_legacy_routes(app, service, run_conversation)
@@ -116,9 +121,23 @@ def _api_v1(service: IntentService, run_conversation: RunConversation) -> Bluepr
     return api
 
 
+def _error(status: int, code: str, message: str, details=None):
+    return jsonify({"error": {"code": code, "message": message, "details": details}}), status
+
+
+def _require_api_key(app: Flask, api_key: str):
+    @app.before_request
+    def check_api_key():
+        # Browsers send CORS preflight requests without custom headers
+        if request.method == "OPTIONS" or request.path == f"{API_PREFIX}/health":
+            return None
+        if not hmac.compare_digest(request.headers.get(API_KEY_HEADER, ""), api_key):
+            return _error(401, "unauthorized", f"A valid API key is required in the {API_KEY_HEADER} header")
+        return None
+
+
 def _register_error_handlers(app: Flask):
-    def error(status: int, code: str, message: str, details=None):
-        return jsonify({"error": {"code": code, "message": message, "details": details}}), status
+    error = _error
 
     @app.errorhandler(ServiceError)
     def service_error(e: ServiceError):

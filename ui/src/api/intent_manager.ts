@@ -2,6 +2,11 @@ import axios from "axios";
 
 const apiUrl = `${import.meta.env.VITE_INTENT_MANAGER_URL}/api/v1`;
 
+// Sent only when the intent manager requires an API key
+const apiKey = import.meta.env.VITE_INTENT_MANAGER_API_KEY;
+const authHeaders: Record<string, string> = apiKey ? { "X-API-Key": apiKey } : {};
+const api = axios.create({ baseURL: apiUrl, headers: authHeaders });
+
 export const submitQuery = async (
   text: string,
   conversationId: string,
@@ -15,8 +20,16 @@ export const submitQuery = async (
       headers: {
         "Content-Type": "application/json",
         Accept: "text/event-stream",
+        ...authHeaders,
       },
     });
+
+    // Errors such as a missing API key are returned as JSON instead of an event stream
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      setFinalMessage(`Error: ${body?.error?.message ?? response.statusText}`);
+      return;
+    }
 
     if (response.body) {
       const reader = response.body.getReader();
@@ -59,16 +72,16 @@ export const submitQuery = async (
 };
 
 export const getIntents = async () => {
-  const response = await axios.get(`${apiUrl}/intents`);
+  const response = await api.get(`/intents`);
   return response.data;
 };
 
 export const getIntent = async (name: string) => {
-  const response = await axios.get(`${apiUrl}/intents/${name}`);
+  const response = await api.get(`/intents/${name}`);
   return response.data;
 };
 
 export const getIntentActions = async (name: string) => {
-  const response = await axios.get(`${apiUrl}/intents/${name}/actions`);
+  const response = await api.get(`/intents/${name}/actions`);
   return response.data;
 };

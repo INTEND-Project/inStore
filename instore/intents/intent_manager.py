@@ -43,7 +43,10 @@ def main(cfg_path: str):
         result = workflow.run({"expression": message, "id": conversation_id})
         return result["messages"][-1].content
 
-    app = create_app(service=service, run_conversation=run_conversation)
+    # Optional, when set every route except the health check requires it in the X-API-Key header
+    api_key = os.environ.get("INSTORE_API_KEY") or None
+    print(f"API key required: {api_key is not None}")
+    app = create_app(service=service, run_conversation=run_conversation, api_key=api_key)
     app.run(host="0.0.0.0", port=5001)
 
 

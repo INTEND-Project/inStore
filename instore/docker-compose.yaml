@@ -18,6 +18,8 @@ services:
       # MOG API
       MOG_API_URL:
       MOG_DRY_RUN:
+      # Optional API key for the intent manager
+      INSTORE_API_KEY:
 
   neo4j:
     image: neo4j

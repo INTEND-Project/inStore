@@ -84,6 +84,10 @@ npm install && npm run dev
 
 The UI is then available at `http://localhost:5173`.
 
+### API key
+
+To require an API key, set `INSTORE_API_KEY` in `./instore/.env`. Every route except `/api/v1/health` then requires the key in the `X-API-Key` header, and the UI needs the same key in `VITE_INTENT_MANAGER_API_KEY` in `./ui/.env`. The UI runs in the browser, so anyone using it can see the key: it protects the API from other clients, not the UI itself.
+
 ### Running on a remote machine
 
 The UI runs in your browser, so it calls the intent manager from the machine you browse from, not from the remote machine. When running inStore on a remote machine (e.g., `remote-host`), point the UI to the remote intent manager in `./ui/.env`:

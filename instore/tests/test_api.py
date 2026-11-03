@@ -232,3 +232,47 @@ def test_legacy_routes(client):
     assert client.get("/intent/nope").status_code == 404
     res = client.post("/intent", json={"expression": "hello", "id": "c2"})
     assert sse_events(res)[-1] == {"type": "response", "reply": "[c2] you said: hello"}
+
+
+# API key
+
+
+KEY = "test-key"
+
+
+@pytest.fixture
+def secured():
+    service = IntentService(
+        engine=MogCdnEngine(use_mock_videos=True),
+        executor=DryRunExecutor(),
+        knowledge_graph=InMemoryKnowledgeGraph(),
+        plan_store=PlanStore(),
+    )
+    return create_app(service=service, run_conversation=fake_conversation, api_key=KEY).test_client()
+
+
+@pytest.mark.parametrize("headers", [{}, {"X-API-Key": "wrong"}], ids=["missing key", "wrong key"])
+@pytest.mark.parametrize(
+    "method,path",
+    [("get", f"{API}/capabilities"), ("get", f"{API}/intents"), ("post", f"{API}/recommendations"), ("get", "/intent"), ("get", f"{API}/nope")],
+)
+def test_api_key_is_required(secured, headers, method, path):
+    assert_error(getattr(secured, method)(path, headers=headers), 401, "unauthorized")
+
+
+def test_api_key_grants_access(secured):
+    headers = {"X-API-Key": KEY}
+    assert secured.get(f"{API}/capabilities", headers=headers).status_code == 200
+    res = secured.post(f"{API}/recommendations", json={"objective": "REDUCE_COST"}, headers=headers)
+    assert res.status_code == 201
+    assert secured.post(f"{API}/recommendations/{res.json['plan_id']}/execute", headers=headers).status_code == 201
+
+
+def test_health_and_cors_preflight_do_not_require_the_key(secured):
+    assert secured.get(f"{API}/health").status_code == 200
+    preflight = secured.options(
+        f"{API}/intents",
+        headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": "x-api-key"},
+    )
+    assert preflight.status_code == 200
+    assert "x-api-key" in preflight.headers.get("Access-Control-Allow-Headers", "").lower()

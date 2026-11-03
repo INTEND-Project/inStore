@@ -4,6 +4,7 @@ import { TbChartBubbleFilled } from "react-icons/tb";
 
 interface SideBarProps {
   onNavigate(page: String): void;
+  onNewChat(): void;
 }
 const SideBar = (props: SideBarProps) => {
   return (
@@ -44,7 +45,7 @@ const SideBar = (props: SideBarProps) => {
         </Collapsible.Trigger>
       </Collapsible.Root>
 
-      <Collapsible.Root onClick={() => props.onNavigate("messages")}>
+      <Collapsible.Root onClick={() => props.onNewChat()}>
         <Collapsible.Trigger
           paddingY="0"
           paddingX="0"

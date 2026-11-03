@@ -1,17 +1,17 @@
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
 
 const apiUrl = import.meta.env.VITE_INTENT_MANAGER_URL;
 
 export const submitQuery = async (
   text: string,
+  conversationId: string,
   setUpdate: (msg: string) => void,
   setFinalMessage: (msg: string) => void,
 ) => {
   try {
     const response = await fetch(`${apiUrl}/intent`, {
       method: "POST",
-      body: JSON.stringify({ expression: text, id: uuidv4() }),
+      body: JSON.stringify({ expression: text, id: conversationId }),
       headers: {
         "Content-Type": "application/json",
         Accept: "text/event-stream",

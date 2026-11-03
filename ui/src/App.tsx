@@ -3,6 +3,7 @@ import "./App.css";
 import ChatbotInput from "./components/input.tsx";
 import { Box, Flex } from "@chakra-ui/react";
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { ChatMessages } from "./components/messages.tsx";
 import Header from "./components/header.tsx";
 import SideBar from "./components/sidebar.tsx";
@@ -16,16 +17,25 @@ interface Message {
   failed?: boolean;
 }
 
+const GREETING: Message = {
+  sender: "instore",
+  content: "Hello, how may I assist you to manage your data and storage ?",
+};
+
 function App() {
   const [page, setPage] = useState<String>("messages");
   const [notifications, setNotifications] = useState<string[]>([]);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      sender: "instore",
-      content: "Hello, how may I assist you to manage your data and storage ?",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [loading, setLoading] = useState<boolean>(false);
+  // Identifies the conversation on the intent manager, so the agent remembers earlier messages of the same chat
+  const [conversationId, setConversationId] = useState<string>(() => uuidv4());
+
+  const newChat = () => {
+    setConversationId(uuidv4());
+    setMessages([GREETING]);
+    setNotifications([]);
+    setPage("messages");
+  };
 
   const submit = async (newMessage: string): Promise<boolean> => {
     setLoading(true);
@@ -37,6 +47,7 @@ function App() {
     try {
       await submitQuery(
         newMessage,
+        conversationId,
         (msg) => {
           setNotifications((n) => [...n, msg]);
         },
@@ -89,7 +100,7 @@ function App() {
         logoSrc="./src/assets/delltech-logo-prm-blue-rgb-proof.svg"
         title="Intent-driven Agentic Data Placement"
       />
-      <SideBar onNavigate={setPage} />
+      <SideBar onNavigate={setPage} onNewChat={newChat} />
       <Flex
         paddingTop="100px"
         height="95vh"

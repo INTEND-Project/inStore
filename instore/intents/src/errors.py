@@ -38,3 +38,10 @@ class PlanExpired(ServiceError):
 class ExecutionFailed(ServiceError):
     http_status = 502
     code = "execution_failed"
+
+
+class UpstreamError(ServiceError):
+    """The recommendation engine or the executor failed, e.g. because the storage environment is unavailable."""
+
+    http_status = 502
+    code = "upstream_error"

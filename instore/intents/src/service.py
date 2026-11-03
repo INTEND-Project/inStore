@@ -6,7 +6,7 @@ from typing import Any, Optional
 from pkg.interfaces import ActionResult, Executor, KnowledgeGraph, Objective, RecommendationEngine
 from pkg.utils.pretty_print import pretty_print
 
-from .errors import ConflictingIntents, ExecutionFailed, InvalidRequest, NotFound
+from .errors import ConflictingIntents, ExecutionFailed, InvalidRequest, NotFound, UpstreamError
 from .plans import Plan, PlanStore
 
 EXAMPLE_ACTIONS = 5
@@ -83,7 +83,10 @@ class IntentService:
 
     def recommend(self, objective: str, params: Optional[dict] = None) -> Plan:
         conflicts_with = self.objective(objective).conflicts_with
-        actions = self.engine.recommend(objective=objective, params=params)
+        try:
+            actions = self.engine.recommend(objective=objective, params=params)
+        except Exception as e:
+            raise UpstreamError(f"The recommendation engine failed: {e}")
         return self.plan_store.add(objective=objective, conflicts_with=conflicts_with, actions=actions)
 
     def plan_summary(self, plan: Plan) -> dict[str, Any]:
@@ -116,9 +119,9 @@ class IntentService:
 
         try:
             results = self.executor.execute(plan.actions)
-        except Exception:
+        except Exception as e:
             self.plan_store.release(plan_id)
-            raise
+            raise UpstreamError(f"The executor failed: {e}")
 
         summary = self.action_summary(results)
         pretty_print(summary, "Intent Service (Execute Plan)")

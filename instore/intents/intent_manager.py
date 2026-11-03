@@ -1,16 +1,12 @@
 import argparse
 import json
 import os
-import queue
-import threading
-from typing import Sequence
+from typing import Callable, Sequence
 
 from dotenv import load_dotenv
-from flask import Flask, Response, request
-from flask_cors import CORS
-from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
 from src.agents import Chatbot, Workflow, build_system_prompt, intent_tools, plan_tools
+from src.api import create_app
 from src.config import IntentManagerConfig
 from src.plans import PlanStore
 from src.service import IntentService
@@ -22,9 +18,6 @@ from pkg.llms import llm_factory
 
 
 def main(cfg_path: str):
-    app = Flask(__name__)
-    CORS(app)
-
     print(f"Loading config: {cfg_path}")
     cfg = IntentManagerConfig(cfg=load_config(cfg_path))
 
@@ -45,61 +38,12 @@ def main(cfg_path: str):
 
     chatbot = Chatbot(llm=llm, tools=tools, system_prompt=build_system_prompt(engine))
 
-    @app.route("/intent", methods=["POST"])
-# {"expression": "Hello world", "id": <uuid>}   
-    def add_new_intent():
-        notify_queue = queue.Queue()
+    def run_conversation(conversation_id: str, message: str, on_tool_call: Callable[[str], None]) -> str:
+        workflow = Workflow(chatbot=chatbot, tools=tools, on_tool_callback=on_tool_call)
+        result = workflow.run({"expression": message, "id": conversation_id})
+        return result["messages"][-1].content
 
-        request_data = request.get_json()
-
-        def _on_tool_call(tool_message: str):
-            notification = {"type": "tool_call", "message": tool_message}
-            notify_queue.put(json.dumps(notification))
-
-        def generate():
-            workflow_result = {}
-
-            def run_workflow(data):
-                try:
-                    w = Workflow(chatbot=chatbot, tools=tools, on_tool_callback=_on_tool_call)
-                    res = w.run(data)
-                    workflow_result["final"] = {"type": "response", "reply": res["messages"][-1].content}
-                except Exception as e:
-                    workflow_result["final"] = {"type": "error", "message": str(e)}
-                finally:
-                    notify_queue.put(None)  # Signal completion
-
-            thread = threading.Thread(target=run_workflow, args=(request_data,))
-            thread.start()
-
-            while True:
-                msg = notify_queue.get()
-                if msg is None:
-                    if "final" in workflow_result:
-                        yield f"data: {json.dumps(workflow_result['final'])}\n\n"
-                    break
-                yield f"data: {msg}\n\n"
-
-        return Response(generate(), mimetype="text/event-stream")
-
-    @app.route("/intent", methods=["GET"])
-    def get_intents():
-        res = kg.get_intents()
-        return Response(status=200, response=json.dumps(res))
-
-    @app.route("/intent/<name>", methods=["GET"])
-    def get_intent(name: str):
-        res = kg.get_intent(name)
-        if res is None:
-            return Response(status=404, response=json.dumps({"error": f"Intent {name} not found"}), mimetype="application/json")
-        return Response(status=200, response=json.dumps(res))
-
-    # Doesn't work properly
-    @app.route("/device/<name>", methods=["GET"])
-    def get_device(name: str):
-        res = kg.get_device(name)
-        return Response(status=200, response=json.dumps(res))
-
+    app = create_app(service=service, run_conversation=run_conversation)
     app.run(host="0.0.0.0", port=5001)
 
 

@@ -203,6 +203,13 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
             )
         return [self._node_to_dict(r["device"]) for r in records]
 
+    def is_healthy(self) -> bool:
+        try:
+            self.driver.verify_connectivity()
+            return True
+        except Exception:
+            return False
+
     @staticmethod
     def _intent_to_dict(intent_node, command_nodes=()) -> dict[str, Any]:
         return {

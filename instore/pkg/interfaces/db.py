@@ -60,3 +60,7 @@ class KnowledgeGraph(ABC):
     @abstractmethod
     def get_topology(self, region: str = "ALL") -> list[dict[str, Any]]:
         pass
+
+    @abstractmethod
+    def is_healthy(self) -> bool:
+        pass

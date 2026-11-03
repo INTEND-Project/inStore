@@ -100,6 +100,16 @@ npm run dev -- --host
 
 The UI is then available at `http://remote-host:5173`. Ports `5173` (UI) and `5001` (intent manager) must be reachable on the remote machine. Vite reads `./ui/.env` only at startup, so restart `npm run dev` after changing it.
 
+## Running the tests
+
+The API tests use an in-memory intent database and the dry run executor, so they need neither Neo4j nor an LLM:
+
+```bash
+cd instore
+pip install -r requirements-dev.txt
+pytest
+```
+
 ## Contributions
 
 To get started with contributions and how to setup your git and IDE, see [CONTRIBUTIONS.md](./CONTRIBUTION.md).

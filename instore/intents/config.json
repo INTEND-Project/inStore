@@ -13,5 +13,9 @@
     "config": {
       "url": "bolt://localhost:7687"
     }
+  },
+  "use_case": {
+    "engine": { "provider": "mog_cdn" },
+    "executor": { "provider": "mog" }
   }
 }

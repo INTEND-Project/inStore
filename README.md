@@ -52,7 +52,16 @@ INSTORE_CONFIG=./intents/config-octo.json           # OCTO EU LLM served by vLLM
 
 Each config file contains the LLM provider, endpoint, and model name. To use your own OpenAI-compatible server (e.g., vLLM), copy one of the `vllm` config files and change its `endpoint` and `model_name`. When `INSTORE_CONFIG` is not set, Docker uses `./intents/config-docker.json`.
 
-If the MOG API is not reachable, set `MOG_DRY_RUN=true` in `.env`. The recommendation engine then plans against mock video data and the video mover logs the actions it would take instead of calling the MOG API.
+The optional `use_case` section of the config file selects the recommendation engine, which decides the storage actions that achieve an intent, and the executor, which carries them out. When the section is missing, the MOG CDN use case is used:
+
+```json
+"use_case": {
+  "engine": { "provider": "mog_cdn" },
+  "executor": { "provider": "mog" }
+}
+```
+
+The MOG engine and executor call the MOG API at `MOG_API_URL`. If the MOG API is not reachable, set `MOG_DRY_RUN=true` in `.env`. The engine then plans against mock video data, and the actions are logged instead of being executed.
 
 Then run the docker compose up command. This command will run both Neo4j and the Python application for inStore
 

@@ -45,6 +45,27 @@ const SideBar = (props: SideBarProps) => {
         </Collapsible.Trigger>
       </Collapsible.Root>
 
+      <Collapsible.Root onClick={() => props.onNavigate("messages")}>
+        <Collapsible.Trigger
+          paddingY="0"
+          paddingX="0"
+          width="100%"
+          _hover={{ cursor: "pointer" }}
+        >
+          <Flex
+            direction="row"
+            gap="20px"
+            paddingLeft="24px"
+            paddingTop="12px"
+            paddingBottom="12px"
+            _hover={{ borderColor: "#0076CE", cursor: "pointer" }}
+          >
+            <IoIosChatbubbles size={28} />
+            <div>Current Chat</div>
+          </Flex>
+        </Collapsible.Trigger>
+      </Collapsible.Root>
+
       <Collapsible.Root onClick={() => props.onNewChat()}>
         <Collapsible.Trigger
           paddingY="0"
@@ -66,53 +87,6 @@ const SideBar = (props: SideBarProps) => {
         </Collapsible.Trigger>
       </Collapsible.Root>
 
-      <div style={{ backgroundColor: "rgb(230,230,230)", height: "1px" }} />
-
-      <Collapsible.Root>
-        <Collapsible.Trigger
-          paddingY="0"
-          paddingX="0"
-          width="100%"
-          _hover={{ cursor: "pointer" }}
-        >
-          <Flex
-            direction="row"
-            gap="20px"
-            paddingLeft="24px"
-            paddingTop="12px"
-            paddingBottom="12px"
-          >
-            <IoIosChatbubbles size={28} />
-            <div>Chat History</div>
-          </Flex>
-        </Collapsible.Trigger>
-        <Collapsible.Content>
-          {[
-            "Cache Pulp Fiction in New York",
-            "Reducing costs during December 2024",
-            "Moving videos across nodes",
-          ].map((e) => (
-            <Flex
-              onClick={() => props.onNavigate("messages")}
-              paddingTop="12px"
-              paddingBottom="12px"
-              paddingLeft="24px"
-              _hover={{
-                backgroundColor: "rgb(240,240,240)",
-                cursor: "pointer",
-              }}
-              textWrap="nowrap"
-              width="100%"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
-              display="inline-block"
-            >
-              {e}
-            </Flex>
-          ))}
-        </Collapsible.Content>
-      </Collapsible.Root>
       <Flex
         width="200px"
         paddingLeft="20px"

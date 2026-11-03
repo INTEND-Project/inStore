@@ -13,6 +13,12 @@ MOCK_VIDEOS_PATH = os.path.join(os.path.dirname(__file__), "mock_videos.json")
 class MogCdnEngine(RecommendationEngine):
     """Places videos across the MOG origin tiers (hot, cold) and regional caches."""
 
+    domain = (
+        "the Content Delivery Network (CDN) of a video streaming service, where each video is stored in "
+        "hot or cold origin storage and can be copied to regional cache nodes"
+    )
+    content_label = "videos"
+
     def __init__(self, api_url: Optional[str] = None, use_mock_videos: bool = False):
         self.api_url = api_url
         self.use_mock_videos = use_mock_videos

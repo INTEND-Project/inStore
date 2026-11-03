@@ -10,8 +10,7 @@ from pkg.interfaces import ActionResult, Executor, KnowledgeGraph, Recommendatio
 from pkg.utils.pretty_print import pretty_print
 
 from ..plans import PlanError, PlanStore
-
-OBJECTIVE_DESCRIPTION = 'The intent objective, either "REDUCE_COST" or "REDUCE_LATENCY"'
+from .intent_tools import OBJECTIVE_DESCRIPTION, supported_objectives
 EXAMPLE_ACTIONS = 5
 
 
@@ -22,8 +21,8 @@ class RecommendInput(BaseModel):
 class Recommend(BaseTool):
     name: str = "recommend"
     description: str = (
-        "Computes a plan of video actions (moves between hot and cold storage, copies to caches, and cache purges) "
-        "that achieves the objective. Nothing is executed, returns a plan_id and a summary of the plan to show the user"
+        "Computes a plan of storage actions (moves, copies, and purges) that achieves the objective. "
+        "Nothing is executed, returns a plan_id and a summary of the plan to show the user"
     )
     args_schema: Optional[ArgsSchema] = RecommendInput
     engine: RecommendationEngine
@@ -38,7 +37,7 @@ class Recommend(BaseTool):
             "plan_id": plan.id,
             "objective": objective,
             "actions": len(actions),
-            "videos": len({a.content_id for a in actions}),
+            self.engine.content_label: len({a.content_id for a in actions}),
             "by_type": dict(Counter(a.type for a in actions)),
             "example_actions": [
                 f"{a.type} {a.content_id}: {a.source} -> {a.destination or '(purged)'}" for a in actions[:EXAMPLE_ACTIONS]
@@ -61,6 +60,7 @@ class ExecutePlan(BaseTool):
     executor: Executor
     knowledge_graph: KnowledgeGraph
     plan_store: PlanStore
+    content_label: str = "items"
 
     def _run(self, plan_id: str) -> str:
         try:
@@ -104,25 +104,25 @@ class ExecutePlan(BaseTool):
         return json.dumps({"intent_name": plan.intent_name, "actions": summary})
 
     def _summary(self, results: list[ActionResult]) -> str:
-        # Each result is one action (move, copy, or purge) on one video, a video can appear in several actions
+        # Each result is one action (move, copy, or purge) on one content item, which can appear in several actions
         succeeded = {"move": 0, "copy": 0, "purge": 0}
         failed = 0
-        videos = set()
+        items = set()
         for r in results:
             if r.ok:
                 succeeded[r.action.type] = succeeded.get(r.action.type, 0) + 1
-                videos.add(r.action.content_id)
+                items.add(r.action.content_id)
             else:
                 pretty_print(f"{r.action}: {r.error}", "Tool Message (Execute Plan)")
                 failed += 1
 
         summary = (
-            f"{sum(succeeded.values())} actions on {len(videos)} videos "
+            f"{sum(succeeded.values())} actions on {len(items)} {self.content_label} "
             f"({succeeded['move']} moves, {succeeded['copy']} copies, {succeeded['purge']} purges), "
             f"{failed} actions failed"
         )
         if self.executor.dry_run:
-            summary += " (dry run: simulated, no changes were made to the MOG environment)"
+            summary += " (dry run: simulated, no changes were made to the storage environment)"
         return summary
 
 
@@ -130,6 +130,12 @@ def plan_tools(
     engine: RecommendationEngine, executor: Executor, knowledge_graph: KnowledgeGraph, plan_store: PlanStore
 ) -> list[BaseTool]:
     return [
-        Recommend(engine=engine, plan_store=plan_store),
-        ExecutePlan(executor=executor, knowledge_graph=knowledge_graph, plan_store=plan_store),
+        Recommend(
+            engine=engine,
+            plan_store=plan_store,
+            description=f"{Recommend.model_fields['description'].default}. {supported_objectives(engine)}",
+        ),
+        ExecutePlan(
+            executor=executor, knowledge_graph=knowledge_graph, plan_store=plan_store, content_label=engine.content_label
+        ),
     ]

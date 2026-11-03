@@ -1,5 +1,3 @@
-from threading import Thread
-from time import sleep
 from typing import Annotated, Any, Callable, Literal, Sequence, TypedDict
 
 from langchain_core.messages import AnyMessage, HumanMessage, ToolMessage
@@ -54,23 +52,16 @@ class Workflow:
             self.on_tool_callback("Searching the intent database")
 
         elif tool_call["name"] == "recommend":
-            self.on_tool_callback("Computing optimal placement of videos")
+            self.on_tool_callback("Computing a plan")
         elif tool_call["name"] == "execute_plan":
-            self.on_tool_callback("Preparing origin storage and cache nodes")
-            sleep(1)
-            self.on_tool_callback("Moving videos between hot and cold storage")
-            sleep(1)
-            self.on_tool_callback("Copying videos to cache nodes")
-            sleep(1)
-            self.on_tool_callback("Saving the intent")
+            self.on_tool_callback("Executing the plan and saving the intent")
 
     def __call_chatbot(self, state: State):
         messages = state["messages"]
         response = self.chatbot.invoke(messages)
         response.pretty_print()
-        if response.tool_calls is not None and len(response.tool_calls) > 0:
-            thread = Thread(target=self._notify_progress, args=(response.tool_calls[0],))
-            thread.start()
+        for tool_call in response.tool_calls or []:
+            self._notify_progress(tool_call)
         return {"messages": [response]}
 
     def __route_model_output(self, state: State) -> Literal["__end__", "tools", "agent"]:

@@ -10,7 +10,7 @@ from flask import Flask, Response, request
 from flask_cors import CORS
 from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
-from src.agents import Chatbot, PlanStore, Workflow, intent_tools, plan_tools
+from src.agents import Chatbot, PlanStore, Workflow, build_system_prompt, intent_tools, plan_tools
 from src.config import IntentManagerConfig
 
 from pkg.db import knowledge_graph_factory
@@ -41,7 +41,7 @@ def main(cfg_path: str):
         *plan_tools(engine=engine, executor=executor, knowledge_graph=kg, plan_store=PlanStore()),
     ]
 
-    chatbot = Chatbot(llm=llm, tools=tools)
+    chatbot = Chatbot(llm=llm, tools=tools, system_prompt=build_system_prompt(engine))
 
     @app.route("/intent", methods=["POST"])
 # {"expression": "Hello world", "id": <uuid>}   

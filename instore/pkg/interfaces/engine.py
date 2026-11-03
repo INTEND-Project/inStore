@@ -23,6 +23,10 @@ class Objective:
 class RecommendationEngine(ABC):
     """Decides which actions achieve an objective, without executing them."""
 
+    # Describes the managed storage environment to the agent, e.g. "a CDN of a video streaming service, ..."
+    domain: str
+    # Plural name of the content the actions apply to, e.g. "videos"
+    content_label: str = "items"
     objectives: list[Objective]
 
     @abstractmethod

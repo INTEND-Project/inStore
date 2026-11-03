@@ -8,7 +8,11 @@ from pydantic import BaseModel, Field
 from pkg.interfaces import KnowledgeGraph, RecommendationEngine
 from pkg.utils.pretty_print import pretty_print
 
-OBJECTIVE_DESCRIPTION = 'The intent objective, either "REDUCE_COST" or "REDUCE_LATENCY"'
+OBJECTIVE_DESCRIPTION = "The intent objective, one of the supported objectives listed in the tool description"
+
+
+def supported_objectives(engine: RecommendationEngine) -> str:
+    return "Supported objectives: " + ", ".join(o.name for o in engine.objectives)
 
 
 class ListIntents(BaseTool):
@@ -31,7 +35,7 @@ class IntentNameInput(BaseModel):
 
 class GetIntent(BaseTool):
     name: str = "get_intent"
-    description: str = "Returns an intent from the intent database, including the commands (video actions) it ran"
+    description: str = "Returns an intent from the intent database, including the commands (storage actions) it ran"
     args_schema: Optional[ArgsSchema] = IntentNameInput
     knowledge_graph: KnowledgeGraph
 
@@ -79,6 +83,10 @@ def intent_tools(knowledge_graph: KnowledgeGraph, engine: RecommendationEngine) 
     return [
         ListIntents(knowledge_graph=knowledge_graph),
         GetIntent(knowledge_graph=knowledge_graph),
-        CheckConflicts(knowledge_graph=knowledge_graph, engine=engine),
+        CheckConflicts(
+            knowledge_graph=knowledge_graph,
+            engine=engine,
+            description=f"{CheckConflicts.model_fields['description'].default}. {supported_objectives(engine)}",
+        ),
         DeleteIntent(knowledge_graph=knowledge_graph),
     ]

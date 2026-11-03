@@ -1,10 +1,11 @@
 import hmac
 import json
+import os
 import queue
 import threading
 from typing import Any, Callable, Iterator, Optional
 
-from flask import Blueprint, Flask, Response, jsonify, request
+from flask import Blueprint, Flask, Response, jsonify, request, send_file
 from flask_cors import CORS
 from pydantic import BaseModel, Field, ValidationError
 from werkzeug.exceptions import HTTPException
@@ -15,6 +16,26 @@ from .service import IntentService
 
 API_PREFIX = "/api/v1"
 API_KEY_HEADER = "X-API-Key"
+SPEC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "openapi", "instore-v1.yaml")
+# Routes that never require the API key: the health check and the API documentation
+PUBLIC_PATHS = {f"{API_PREFIX}/health", f"{API_PREFIX}/openapi.yaml", f"{API_PREFIX}/docs"}
+
+SWAGGER_UI_VERSION = "5.17.14"
+DOCS_PAGE = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>inStore API</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@{SWAGGER_UI_VERSION}/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@{SWAGGER_UI_VERSION}/swagger-ui-bundle.js"></script>
+  <script>SwaggerUIBundle({{ url: "openapi.yaml", dom_id: "#swagger-ui" }});</script>
+</body>
+</html>
+"""
 
 # Runs one conversation turn: (conversation_id, message, on_tool_call) -> reply
 RunConversation = Callable[[str, str, Callable[[str], None]], str]
@@ -48,7 +69,7 @@ def stream_conversation(run_conversation: RunConversation, conversation_id: str,
 
 
 def create_app(service: IntentService, run_conversation: RunConversation, api_key: Optional[str] = None) -> Flask:
-    """Creates the intent manager app. When api_key is set, every route except the health check requires it."""
+    """Creates the intent manager app. When api_key is set, every route except PUBLIC_PATHS requires it."""
     app = Flask(__name__)
     CORS(app)
     if api_key:
@@ -71,6 +92,15 @@ def _api_v1(service: IntentService, run_conversation: RunConversation) -> Bluepr
             "dry_run": service.executor.dry_run,
         }
         return jsonify(body), 200 if kg_ok else 503
+
+    @api.get("/openapi.yaml")
+    def openapi_spec():
+        return send_file(SPEC_PATH, mimetype="application/yaml")
+
+    @api.get("/docs")
+    def docs():
+        # Swagger UI is loaded from a CDN, so the browser needs internet access
+        return Response(DOCS_PAGE, mimetype="text/html")
 
     @api.get("/capabilities")
     def capabilities():
@@ -129,7 +159,7 @@ def _require_api_key(app: Flask, api_key: str):
     @app.before_request
     def check_api_key():
         # Browsers send CORS preflight requests without custom headers
-        if request.method == "OPTIONS" or request.path == f"{API_PREFIX}/health":
+        if request.method == "OPTIONS" or request.path in PUBLIC_PATHS:
             return None
         if not hmac.compare_digest(request.headers.get(API_KEY_HEADER, ""), api_key):
             return _error(401, "unauthorized", f"A valid API key is required in the {API_KEY_HEADER} header")

@@ -66,6 +66,35 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Health" }
 
+  /api/v1/openapi.yaml:
+    get:
+      tags: [Service]
+      operationId: getOpenApiSpec
+      summary: This OpenAPI spec
+      description: Never requires an API key.
+      security: []
+      responses:
+        "200":
+          description: The OpenAPI spec of the API
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  /api/v1/docs:
+    get:
+      tags: [Service]
+      operationId: getApiDocs
+      summary: Interactive documentation of the API (Swagger UI)
+      description: |
+        Never requires an API key. The page loads Swagger UI from a CDN, so the browser needs internet access.
+      security: []
+      responses:
+        "200":
+          description: The documentation page
+          content:
+            text/html:
+              schema: { type: string }
+
   /api/v1/capabilities:
     get:
       tags: [Service]
@@ -339,7 +368,8 @@ components:
       in: header
       name: X-API-Key
       description: |
-        Required on every operation except the health check when the deployment sets INSTORE_API_KEY.
+        Required on every operation except the health check and the API documentation when the deployment
+        sets INSTORE_API_KEY.
 
   parameters:
     IntentName:

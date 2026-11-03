@@ -106,7 +106,7 @@ The UI is then available at `http://remote-host:5173`. Ports `5173` (UI) and `50
 
 ## REST API
 
-The intent manager exposes a REST API under `/api/v1`, documented by the OpenAPI spec in [`instore/openapi/instore-v1.yaml`](./instore/openapi/instore-v1.yaml).
+The intent manager exposes a REST API under `/api/v1`, documented by the OpenAPI spec in [`instore/openapi/instore-v1.yaml`](./instore/openapi/instore-v1.yaml). A running intent manager serves the spec at `http://localhost:5001/api/v1/openapi.yaml` and interactive documentation at `http://localhost:5001/api/v1/docs`, which loads Swagger UI from a CDN.
 
 ## Running the tests
 

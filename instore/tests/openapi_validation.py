@@ -7,10 +7,15 @@ from openapi_core.templating.paths.exceptions import OperationNotFound, PathNotF
 
 SPEC_PATH = os.path.join(os.path.dirname(__file__), "..", "openapi", "instore-v1.yaml")
 
+
+def _as_text(data):
+    return data.decode() if isinstance(data, bytes) else data
+
+
 openapi = OpenAPI.from_file_path(
     SPEC_PATH,
-    # Server-Sent Event streams are documented as plain strings
-    config=Config(extra_media_type_deserializers={"text/event-stream": lambda data: data.decode() if isinstance(data, bytes) else data}),
+    # Server-Sent Event streams, the spec, and the docs page are documented as plain strings
+    config=Config(extra_media_type_deserializers={t: _as_text for t in ("text/event-stream", "application/yaml", "text/html")}),
 )
 
 

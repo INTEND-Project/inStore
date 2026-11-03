@@ -198,6 +198,18 @@ def test_missing_intent(client, method, path):
     assert_error(getattr(client, method)(f"{API}{path}"), 404, "not_found")
 
 
+def test_spec_and_docs_are_served(client):
+    from openapi_validation import SPEC_PATH
+
+    res = client.get(f"{API}/openapi.yaml")
+    assert res.status_code == 200 and res.mimetype == "application/yaml"
+    with open(SPEC_PATH, "rb") as f:
+        assert res.data == f.read()
+    res = client.get(f"{API}/docs")
+    assert res.status_code == 200 and res.mimetype == "text/html"
+    assert 'url: "openapi.yaml"' in res.get_data(as_text=True)
+
+
 def test_unknown_route_returns_json(client):
     assert_error(client.get(f"{API}/nope"), 404, "not_found")
 
@@ -275,8 +287,10 @@ def test_api_key_grants_access(secured):
     assert secured.post(f"{API}/recommendations/{res.json['plan_id']}/execute", headers=headers).status_code == 201
 
 
-def test_health_and_cors_preflight_do_not_require_the_key(secured):
+def test_health_docs_and_cors_preflight_do_not_require_the_key(secured):
     assert secured.get(f"{API}/health").status_code == 200
+    assert secured.get(f"{API}/openapi.yaml").status_code == 200
+    assert secured.get(f"{API}/docs").status_code == 200
     preflight = secured.options(
         f"{API}/intents",
         headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": "x-api-key"},

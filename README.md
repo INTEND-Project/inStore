@@ -104,9 +104,13 @@ npm run dev -- --host
 
 The UI is then available at `http://remote-host:5173`. Ports `5173` (UI) and `5001` (intent manager) must be reachable on the remote machine. Vite reads `./ui/.env` only at startup, so restart `npm run dev` after changing it.
 
+## REST API
+
+The intent manager exposes a REST API under `/api/v1`, documented by the OpenAPI spec in [`instore/openapi/instore-v1.yaml`](./instore/openapi/instore-v1.yaml).
+
 ## Running the tests
 
-The API tests use an in-memory intent database and the dry run executor, so they need neither Neo4j nor an LLM:
+The API tests use an in-memory intent database and the dry run executor, so they need neither Neo4j nor an LLM. They also check every response and route against the OpenAPI spec:
 
 ```bash
 cd instore

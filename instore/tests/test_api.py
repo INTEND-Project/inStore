@@ -3,6 +3,7 @@ import json
 import pytest
 
 from fakes import FailingExecutor, InMemoryKnowledgeGraph, RaisingExecutor
+from openapi_validation import SpecValidatingClient
 from pkg.engines import MogCdnEngine
 from pkg.executors import DryRunExecutor
 from src.api import create_app
@@ -27,7 +28,13 @@ def make_client(executor=None, kg=None, ttl_seconds=1800, engine=None):
         plan_store=PlanStore(ttl_seconds=ttl_seconds),
         model_name="test-model",
     )
-    return create_app(service=service, run_conversation=fake_conversation).test_client()
+    return spec_validating_client(create_app(service=service, run_conversation=fake_conversation))
+
+
+def spec_validating_client(app):
+    # Every response of the tests is checked against the OpenAPI spec
+    app.test_client_class = SpecValidatingClient
+    return app.test_client()
 
 
 @pytest.fixture
@@ -248,7 +255,7 @@ def secured():
         knowledge_graph=InMemoryKnowledgeGraph(),
         plan_store=PlanStore(),
     )
-    return create_app(service=service, run_conversation=fake_conversation, api_key=KEY).test_client()
+    return spec_validating_client(create_app(service=service, run_conversation=fake_conversation, api_key=KEY))
 
 
 @pytest.mark.parametrize("headers", [{}, {"X-API-Key": "wrong"}], ids=["missing key", "wrong key"])

@@ -1,2 +1,4 @@
 -r requirements.txt
 pytest==8.4.2
+openapi-core==0.19.5
+openapi-spec-validator==0.7.2

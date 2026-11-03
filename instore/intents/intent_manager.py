@@ -82,6 +82,8 @@ def main(cfg_path: str):
     @app.route("/intent/<name>", methods=["GET"])
     def get_intent(name: str):
         res = kg.get_intent(name)
+        if res is None:
+            return Response(status=404, response=json.dumps({"error": f"Intent {name} not found"}), mimetype="application/json")
         return Response(status=200, response=json.dumps(res))
 
     # Doesn't work properly

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 from neo4j import Record
 
@@ -7,12 +7,16 @@ from neo4j import Record
 class KnowledgeGraph(ABC):
     @abstractmethod
     def create_intent(
-        self, intent_name: str, start_from: str, end_at: str, objective: str, commands: list[dict[str, str]]
-    ):
+        self,
+        objective: str,
+        commands: list[dict[str, str]],
+        start_from: Optional[str] = None,
+        end_at: str = "never",
+    ) -> str:
         pass
 
     @abstractmethod
-    def delete_intent(self, intent_name: str):
+    def delete_intent(self, intent_name: str) -> bool:
         pass
 
     @abstractmethod
@@ -36,15 +40,17 @@ class KnowledgeGraph(ABC):
         pass
 
     @abstractmethod
-    def get_intents(self) -> list[object]:
+    def get_intents(self) -> list[dict[str, Any]]:
         pass
 
     @abstractmethod
-    def get_conflicting_intents(self, start_time: str, end_time: str, objective: str) -> list[object]:
+    def get_conflicting_intents(
+        self, objectives: list[str], start_time: str, end_time: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         pass
 
     @abstractmethod
-    def get_intent(self, name: str) -> object:
+    def get_intent(self, name: str) -> Optional[dict[str, Any]]:
         pass
 
     @abstractmethod

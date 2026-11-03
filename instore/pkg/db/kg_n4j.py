@@ -1,5 +1,7 @@
 import os
-from typing import Any, Literal
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Literal, Optional
 
 from neo4j import Driver, GraphDatabase, Query, Record
 from typing_extensions import LiteralString
@@ -31,99 +33,57 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
 
     def get_conflicting_intents(
         self,
+        objectives: list[str],
         start_time: str,
-        end_time: str,
-        objective: str,
-    ):
-        records, _, _ = self.driver.execute_query(
-            """MATCH (intentInDb:Intent)
-                WITH intentInDb,
-                     datetime(intentInDb.from) AS existingStart,
-                     CASE intentInDb.to
-                          WHEN 'never' THEN null 
-                          ELSE datetime(intentInDb.to)
-                     END AS existingEnd,
-                     datetime($start_date) AS newStart,
-                     datetime($end_date) AS newEnd
+        end_time: Optional[str] = None,
+    ) -> list[dict[str, Any]]:
+        """Return intents with one of the given objectives whose active period overlaps [start_time, end_time].
 
-
-                WHERE
-                    
-                    existingStart <= newEnd
-                    AND
-                    (existingEnd IS NULL OR newStart <= existingEnd)
-                    AND
-                    intentInDb.objective = $objective
-
-                RETURN intentInDb as ConflictingIntent""",
-            start_date=start_time,
-            end_date=end_time,
-            objective=objective,
-        )
-
-        intents = []
-        for r in records:
-            intents.append(r.data())
-        return intents
-
-    def get_intents(self) -> list[object]:
+        An end of None or 'never' means open ended, and intents without dates are treated as always active.
+        """
         records, _, _ = self.driver.execute_query(
             """
-                MATCH (i:Intent)
-                OPTIONAL MATCH (i:Intent)-[r:RUNS]->(c:Command)
-                RETURN i,c
-                """
+            MATCH (i:Intent)
+            WHERE i.objective IN $objectives
+            WITH i,
+                 CASE WHEN i.from IS NULL THEN null ELSE datetime(i.from) END AS existingStart,
+                 CASE WHEN i.to IS NULL OR i.to = 'never' THEN null ELSE datetime(i.to) END AS existingEnd,
+                 datetime($start_time) AS newStart,
+                 CASE WHEN $end_time IS NULL OR $end_time = 'never' THEN null ELSE datetime($end_time) END AS newEnd
+            WHERE (existingStart IS NULL OR newEnd IS NULL OR existingStart <= newEnd)
+              AND (existingEnd IS NULL OR newStart <= existingEnd)
+            RETURN i
+            """,
+            objectives=objectives,
+            start_time=start_time,
+            end_time=end_time,
         )
-        intents = {}
-        for record in records:
-            data = record.data()
-            intent_name = data["i"]["name"]
-            if intent_name not in intents:
-                intents[intent_name] = {
-                    "objective": data["i"]["objective"],
-                }
+        return [self._intent_to_dict(r["i"]) for r in records]
 
-        intent_list = []
-        for k, v in intents.items():
-            v["name"] = k
-            intent_list.append(v)
-        return intent_list
-
-    def get_intent(self, name) -> object:
+    def get_intents(self) -> list[dict[str, Any]]:
         records, _, _ = self.driver.execute_query(
             """
-            MATCH (i:Intent {name: $name})-[r:RUNS]->(c:Command)
-                RETURN i,c
-                """,
+            MATCH (i:Intent)
+            OPTIONAL MATCH (i)-[:RUNS]->(c:Command)
+            RETURN i, collect(c) AS commands
+            ORDER BY i.from
+            """
+        )
+        return [self._intent_to_dict(r["i"], r["commands"]) for r in records]
+
+    def get_intent(self, name: str) -> Optional[dict[str, Any]]:
+        # OPTIONAL MATCH so intents without commands are still returned
+        records, _, _ = self.driver.execute_query(
+            """
+            MATCH (i:Intent {name: $name})
+            OPTIONAL MATCH (i)-[:RUNS]->(c:Command)
+            RETURN i, collect(c) AS commands
+            """,
             name=name,
         )
-        intents = {}
-        for record in records:
-            data = record.data()
-            intent_name = data["i"]["name"]
-            if intent_name not in intents:
-                intents[intent_name] = {
-                    "from": data["i"]["from"],
-                    "to": data["i"]["to"],
-                    "objective": data["i"]["objective"],
-                    "commands": [],
-                }
-
-            intent_commands: list[dict[str, str]] = intents[intent_name]["commands"]
-            command = {
-                "date_time": data["c"]["date_time"],
-                "content_id": data["c"]["content_id"],
-                "destination": data["c"]["destination"],
-                "source": data["c"]["source"],
-                "cmd": data["c"]["cmd"],
-            }
-            if command not in intent_commands:
-                intent_commands.append(command)
-
-            intents[intent_name]["commands"] = intent_commands
-
-        for _, v in intents.items():
-            return v
+        if not records:
+            return None
+        return self._intent_to_dict(records[0]["i"], records[0]["commands"])
 
     def get_device(self, name) -> object:
         records, _, _ = self.driver.execute_query(
@@ -133,10 +93,36 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
         return [r.data() for r in records][0]["d"]
 
     def create_intent(
-        self, intent_name: str, start_from: str, end_at: str, objective: str, commands: list[dict[str, str]]
-    ):
-        with self.driver.session() as session:
-            session.execute_write(self.__create_intent_tx, intent_name, start_from, end_at, objective, commands)
+        self,
+        objective: str,
+        commands: list[dict[str, str]],
+        start_from: Optional[str] = None,
+        end_at: str = "never",
+    ) -> str:
+        """Create an intent and one Command node per command, linked only to this intent. Returns the intent name."""
+        name = f"{objective.lower()}_{uuid.uuid4()}"
+        start_from = start_from or datetime.now(timezone.utc).isoformat(timespec="seconds")
+        # A single query runs in a single transaction, so the intent and its commands are created together
+        self.driver.execute_query(
+            """
+            CREATE (i:Intent {name: $name, objective: $objective, from: $start_from, to: $end_at})
+            WITH i
+            UNWIND $commands AS cmd
+            CREATE (i)-[:RUNS]->(:Command {
+                cmd: cmd.cmd,
+                content_id: cmd.content_id,
+                date_time: cmd.date_time,
+                source: cmd.source,
+                destination: cmd.destination
+            })
+            """,
+            name=name,
+            objective=objective,
+            start_from=start_from,
+            end_at=end_at,
+            commands=commands,
+        )
+        return name
 
     def create_user(self, user_name: str):
         self.driver.execute_query(
@@ -186,63 +172,17 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
             backend=backend,
         )
 
-    def delete_intent(self, intent_name: str):
-        raise NotImplementedError("Delete intent not implemented yet")
-
-    def __create_intent_tx(
-        self,
-        tx,
-        intent_name: str,
-        start_from: str,
-        end_at: str,
-        objective: str,
-        commands: list[dict[str, str]],
-    ):
-        # Create INTENT
-        tx.run(
+    def delete_intent(self, intent_name: str) -> bool:
+        """Delete an intent and its commands. Returns False if the intent does not exist."""
+        _, summary, _ = self.driver.execute_query(
             """
-            MERGE (i:Intent {name: $name, from: $start_from, to: $end_at, objective: $objective})
-                        RETURN i.name 
+            MATCH (i:Intent {name: $name})
+            OPTIONAL MATCH (i)-[:RUNS]->(c:Command)
+            DETACH DELETE c, i
             """,
             name=intent_name,
-            start_from=start_from,
-            end_at=end_at,
-            objective=objective,
         )
-
-        # Link INTENT to Command
-        for cmd in commands:
-            tx.run(
-                """
-                MERGE (c:Command {
-                    cmd: $cmd, 
-                    content_id: $content_id, 
-                    date_time: $date_time, 
-                    destination: $destination, 
-                    source: $source
-                })
-                RETURN c.cmd
-                """,
-                cmd=cmd["cmd"],
-                content_id=cmd["content_id"],
-                date_time=cmd["date_time"],
-                destination=cmd["destination"],
-                source=cmd["source"],
-            )
-            tx.run(
-                """
-                    MATCH (i:Intent {name: $intent_name })
-                    MATCH (c:Command {cmd: $cmd })
-                    MERGE (i)-[r:RUNS]->(c)
-                    MERGE (c)-[o:ON_DEVICE]->(d:Device {name: $device_name})
-                    RETURN i.name
-                """,
-                intent_name=intent_name,
-                cmd=cmd["cmd"],
-                device_name=cmd["destination"],
-            )
-
-        return
+        return summary.counters.nodes_deleted > 0
 
     def get_topology(self, region: str = "ALL") -> list[dict[str, Any]]:
         records = None
@@ -263,6 +203,19 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
                 geolocation=region,
             )
         return [self._node_to_dict(r["device"]) for r in records]
+
+    @staticmethod
+    def _intent_to_dict(intent_node, command_nodes=()) -> dict[str, Any]:
+        return {
+            "name": intent_node.get("name"),
+            "objective": intent_node.get("objective"),
+            "from": intent_node.get("from"),
+            "to": intent_node.get("to"),
+            "commands": [
+                {k: c.get(k) for k in ("date_time", "cmd", "content_id", "source", "destination")}
+                for c in command_nodes
+            ],
+        }
 
     def _node_to_dict(self, neo4j_node):
         props = {}

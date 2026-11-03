@@ -22,30 +22,36 @@ export const submitQuery = async (
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
+      const handleEvent = (event: string) => {
+        if (!event.startsWith("data: ")) return;
+        try {
+          const data = JSON.parse(event.slice("data: ".length));
+
+          if (data.type === "tool_call") {
+            setUpdate(data.message);
+          } else if (data.type === "response") {
+            setFinalMessage(data.reply);
+          } else if (data.type === "error") {
+            setFinalMessage(`Error: ${data.message}`);
+          }
+        } catch (e) {
+          console.error("Error parsing event", e);
+        }
+      };
+
+      // A network read can end in the middle of an event (long replies over a real network),
+      // so keep the incomplete part until the rest arrives. Events are separated by a blank line.
+      let buffer = "";
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-
-        const lines = chunk.split("\n");
-        lines.forEach((line) => {
-          if (line.startsWith("data: ")) {
-            const jsonStr = line.replace("data: ", "");
-            try {
-              const data = JSON.parse(jsonStr);
-
-              if (data.type === "tool_call") {
-                setUpdate(data.message);
-              } else if (data.type === "response") {
-                setFinalMessage(data.reply);
-              }
-            } catch (e) {
-              console.error("Error parsing JSON chunk", e);
-            }
-          }
-        });
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+        events.forEach(handleEvent);
       }
+      handleEvent(buffer.trim());
     }
   } catch (e) {
     console.error(e);

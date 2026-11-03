@@ -33,20 +33,26 @@ class VideoMover(BaseTool):
 
             reader = csv.reader(csvfile, delimiter=",")
 
-            succeeded = 0
+            # Each row is one action (move, copy, or purge) on one video, a video can appear in several rows
+            succeeded = {"move": 0, "copy": 0, "purge": 0}
             failed = 0
+            videos = set()
             for row in reader:
                 try:
-                    self._process_row(row)
-                    succeeded += 1
+                    action = self._process_row(row)
+                    succeeded[action] += 1
+                    videos.add(row[0].strip())
                 except Exception as e:
                     pretty_print(e, "Tool Message (Video Mover)")
                     failed += 1
 
+        summary = (
+            f"Successfully completed {sum(succeeded.values())} actions on {len(videos)} videos "
+            f"({succeeded['move']} moves, {succeeded['copy']} copies, {succeeded['purge']} purges), "
+            f"{failed} actions failed"
+        )
         if self._is_dry_run():
-            summary = f"Successfully moved {succeeded} videos, failed to move {failed} videos (dry run: simulated, no changes were made to the MOG environment)"
-        else:
-            summary = f"Successfully moved {succeeded} videos, failed to move {failed} videos... skipping"
+            summary += " (dry run: simulated, no changes were made to the MOG environment)"
 
         pretty_print(summary, title="Tool Message (Video Mover)")
         return summary
@@ -54,8 +60,8 @@ class VideoMover(BaseTool):
     def _is_dry_run(self) -> bool:
         return os.environ.get("MOG_DRY_RUN", "").lower() in ("true", "1")
 
-    def _process_row(self, row):
-        """Process a single row from the CSV file."""
+    def _process_row(self, row) -> str:
+        """Process a single row from the CSV file and return its action (move, copy, or purge)."""
         if len(row) < 2:
             raise Exception("Invalid row (insufficient columns)")
 
@@ -79,7 +85,7 @@ class VideoMover(BaseTool):
 
         if self._is_dry_run():
             print(f"[DRY RUN] {action} {video_id}: {source_node} -> {destination_node or '(purged)'}")
-            return
+            return action
 
         if action == "purge":
             requests.post(
@@ -99,6 +105,8 @@ class VideoMover(BaseTool):
                 {"region": destination_node, "file": video_id},
                 timeout=10,
             )
+
+        return action
 
     async def _arun(self, csv_file_path: str) -> str:
         """Async version of the tool."""

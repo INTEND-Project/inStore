@@ -1,4 +1,3 @@
-import csv
 import json
 import os
 from datetime import datetime, timezone
@@ -7,23 +6,12 @@ from typing import Optional
 from langchain_core.tools import ArgsSchema, BaseTool
 from pydantic import BaseModel, Field
 
-from pkg.interfaces import KnowledgeGraph
+from pkg.interfaces import KnowledgeGraph, RecommendationEngine
 from pkg.utils.pretty_print import pretty_print
 
-from .mog_video_mover import classify_action
-
-# Objectives that cannot be active at the same time
-CONFLICTING_OBJECTIVES = {
-    "REDUCE_COST": ["REDUCE_LATENCY"],
-    "REDUCE_LATENCY": ["REDUCE_COST"],
-}
+from .actions_csv import read_actions_csv
 
 OBJECTIVE_DESCRIPTION = 'The intent objective, either "REDUCE_COST" or "REDUCE_LATENCY"'
-
-
-def _check_objective(objective: str):
-    if objective not in CONFLICTING_OBJECTIVES:
-        raise ValueError(f"Unknown objective {objective}, supported objectives are {list(CONFLICTING_OBJECTIVES)}")
 
 
 class ListIntents(BaseTool):
@@ -66,11 +54,12 @@ class CheckConflicts(BaseTool):
     description: str = "Returns the existing intents that conflict with a new intent with the given objective"
     args_schema: Optional[ArgsSchema] = ObjectiveInput
     knowledge_graph: KnowledgeGraph
+    engine: RecommendationEngine
 
     def _run(self, objective: str) -> str:
-        _check_objective(objective)
+        conflicts_with = self.engine.get_objective(objective).conflicts_with
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        conflicts = self.knowledge_graph.get_conflicting_intents(CONFLICTING_OBJECTIVES[objective], now)
+        conflicts = self.knowledge_graph.get_conflicting_intents(conflicts_with, now)
         pretty_print(f"Found {len(conflicts)} conflicting intents for {objective}", "Tool Message (Check Conflicts)")
         if not conflicts:
             return "No conflicting intents"
@@ -89,28 +78,18 @@ class CreateIntent(BaseTool):
     )
     args_schema: Optional[ArgsSchema] = CreateIntentInput
     knowledge_graph: KnowledgeGraph
+    engine: RecommendationEngine
 
     def _run(self, objective: str, csv_file_path: str) -> str:
-        _check_objective(objective)
+        self.engine.get_objective(objective)
         if not os.path.exists(csv_file_path):
             raise ValueError(f"CSV file {csv_file_path} not found")
 
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        commands = []
-        with open(csv_file_path, "r", newline="", encoding="utf-8") as csvfile:
-            for row in csv.reader(csvfile, delimiter=","):
-                if len(row) < 3:
-                    continue
-                source, destination = row[1].strip(), row[2].strip()
-                commands.append(
-                    {
-                        "cmd": classify_action(source, destination),
-                        "content_id": row[0].strip(),
-                        "source": source,
-                        "destination": destination,
-                        "date_time": now,
-                    }
-                )
+        commands = [
+            {"cmd": a.type, "content_id": a.content_id, "source": a.source, "destination": a.destination, "date_time": now}
+            for a in read_actions_csv(csv_file_path)
+        ]
 
         name = self.knowledge_graph.create_intent(objective=objective, commands=commands, start_from=now)
         pretty_print(f"Created intent {name} with {len(commands)} commands", "Tool Message (Create Intent)")
@@ -129,11 +108,11 @@ class DeleteIntent(BaseTool):
         return f"Deleted intent {name}" if deleted else f"Intent {name} not found"
 
 
-def intent_tools(knowledge_graph: KnowledgeGraph) -> list[BaseTool]:
+def intent_tools(knowledge_graph: KnowledgeGraph, engine: RecommendationEngine) -> list[BaseTool]:
     return [
         ListIntents(knowledge_graph=knowledge_graph),
         GetIntent(knowledge_graph=knowledge_graph),
-        CheckConflicts(knowledge_graph=knowledge_graph),
-        CreateIntent(knowledge_graph=knowledge_graph),
+        CheckConflicts(knowledge_graph=knowledge_graph, engine=engine),
+        CreateIntent(knowledge_graph=knowledge_graph, engine=engine),
         DeleteIntent(knowledge_graph=knowledge_graph),
     ]

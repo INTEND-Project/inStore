@@ -1,7 +1,9 @@
-import requests
-import csv
 import hashlib
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
+
+import requests
+
+from pkg.interfaces import Action
 
 REGION_CAPACITY_MB: Dict[str, int] = {
     "us-east-1": 50_000,       # 50 GB
@@ -26,7 +28,7 @@ def fetch_all_videos(base_url: str) -> List[dict]:
     videos: List[dict] = []
 
     while True:
-        resp = requests.get(base_url, params={"page": page})
+        resp = requests.get(base_url, params={"page": page}, timeout=30)
         resp.raise_for_status()
         payload = resp.json()
 
@@ -65,25 +67,14 @@ def copy_to_cache(mode: str, region_pred: int, region_views: int, size_mb: int) 
 
     raise ValueError(f"Unknown mode: {mode}")
 
-def write_csv_no_header(rows: List[Tuple[str, str, str]], path: str) -> None:
-    """
-    Writes rows with no header. Purge rows have empty destination field -> trailing comma.
-    """
-    with open(path, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        for key, src, dst in rows:
-            w.writerow([key, src, dst])
-            
-def plan(mode: str, base_url: str = "http://10.13.14.1:30070/videos", out_csv: str = "actions.csv", videos: Optional[List[dict]] = None):
+def plan(mode: str, videos: List[dict]) -> List[Action]:
+    """Returns the actions that place the videos according to the mode: tier moves first, then cache purges, then cache copies."""
 
-    if videos is None:
-        videos = fetch_all_videos(base_url)
-    
     size_by_key: Dict[str, int] = {v["key"]: fake_size_mb(v["key"]) for v in videos}
     
-    actions: List[Tuple[str, str, str]] = []
-    purge_actions: List[Tuple[str, str, str]] = []
-    copy_candidates: List[Tuple[str, str, str]] = []
+    actions: List[Action] = []
+    purge_actions: List[Action] = []
+    copy_candidates: List[Action] = []
 
     for video in videos:
         videoid = video['videoid']
@@ -97,7 +88,7 @@ def plan(mode: str, base_url: str = "http://10.13.14.1:30070/videos", out_csv: s
         destination = destination_origin_tier(mode=mode, overall_pred=overall_prediction, total_views=total_views)
         
         if storage != destination:
-            action = (key, storage, destination)
+            action = Action(type="move", content_id=key, source=storage, destination=destination)
             actions.append(action)
              
         for cache in video['edgeNodes']:
@@ -112,10 +103,10 @@ def plan(mode: str, base_url: str = "http://10.13.14.1:30070/videos", out_csv: s
 
             if is_cached:
                 if not wants_cache:
-                    action = (key, region, "")
+                    action = Action(type="purge", content_id=key, source=region)
                     purge_actions.append(action)
             elif wants_cache:
-                action = (key, destination, region)
+                action = Action(type="copy", content_id=key, source=destination, destination=region)
                 copy_candidates.append(action)
                 
         # print("\n")
@@ -123,13 +114,4 @@ def plan(mode: str, base_url: str = "http://10.13.14.1:30070/videos", out_csv: s
     actions.extend(purge_actions)
     actions.extend(copy_candidates)
     
-    write_csv_no_header(actions, out_csv)
-    
-
-if __name__ == "__main__":
-
-    base_url = "http://10.13.14.1:30070/videos"
-    out_csv = "actions.csv"
-    mode = REDUCE_COST
-    
-    plan(mode=mode, base_url=base_url, out_csv=out_csv)
+    return actions

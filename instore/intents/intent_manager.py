@@ -14,6 +14,8 @@ from src.agents import Chatbot, RecommendationEngine, VideoMover, Workflow, inte
 from src.config import IntentManagerConfig
 
 from pkg.db import knowledge_graph_factory
+from pkg.engines import MogCdnEngine
+from pkg.executors import DryRunExecutor, MogExecutor
 from pkg.llms import llm_factory
 
 
@@ -28,10 +30,17 @@ def main(cfg_path: str):
 
     kg = knowledge_graph_factory(info=cfg.kg_info)
 
+    # In a dry run, plan against mock videos and log the actions instead of calling the MOG API
+    dry_run = os.environ.get("MOG_DRY_RUN", "").lower() in ("true", "1")
+    mog_api_url = os.environ.get("MOG_API_URL")
+    engine = MogCdnEngine(api_url=mog_api_url, use_mock_videos=dry_run)
+    executor = DryRunExecutor() if dry_run else MogExecutor(api_url=mog_api_url)
+    print(f"Recommendation engine: {type(engine).__name__}, executor: {type(executor).__name__}")
+
     tools: Sequence[BaseTool] = [
-        *intent_tools(knowledge_graph=kg),
-        RecommendationEngine(),
-        VideoMover(),
+        *intent_tools(knowledge_graph=kg, engine=engine),
+        RecommendationEngine(engine=engine),
+        VideoMover(executor=executor),
     ]
 
     chatbot = Chatbot(llm=llm, tools=tools)

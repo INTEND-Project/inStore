@@ -73,6 +73,24 @@ cp .env-example .env # points the UI to the intent manager at http://localhost:5
 npm install && npm run dev
 ```
 
+The UI is then available at `http://localhost:5173`.
+
+### Running on a remote machine
+
+The UI runs in your browser, so it calls the intent manager from the machine you browse from, not from the remote machine. When running inStore on a remote machine (e.g., `remote-host`), point the UI to the remote intent manager in `./ui/.env`:
+
+```bash
+VITE_INTENT_MANAGER_URL=http://remote-host:5001
+```
+
+Vite only listens on `localhost` by default, so start the UI with `--host` to make it reachable from other machines:
+
+```bash
+npm run dev -- --host
+```
+
+The UI is then available at `http://remote-host:5173`. Ports `5173` (UI) and `5001` (intent manager) must be reachable on the remote machine. Vite reads `./ui/.env` only at startup, so restart `npm run dev` after changing it.
+
 ## Contributions
 
 To get started with contributions and how to setup your git and IDE, see [CONTRIBUTIONS.md](./CONTRIBUTION.md).

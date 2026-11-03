@@ -32,7 +32,11 @@ def fetch_all_videos(base_url: str) -> List[dict]:
         resp.raise_for_status()
         payload = resp.json()
 
-        videos.extend(payload.get("data", []))
+        # MOG answers 200 with "data": null when it cannot serve videos, e.g. when its prediction service is down
+        data = payload.get("data")
+        if data is None:
+            raise RuntimeError(f"MOG API returned no videos: {payload.get('message', 'no message')}")
+        videos.extend(data)
 
         next_page = payload.get("nextPage")
         if not next_page:

@@ -60,7 +60,3 @@ class KnowledgeGraph(ABC):
     @abstractmethod
     def get_topology(self, region: str = "ALL") -> list[dict[str, Any]]:
         pass
-
-    @abstractmethod
-    def execute_query(self, query: str) -> Any:
-        pass

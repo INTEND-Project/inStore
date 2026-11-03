@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal, Optional
 
-from neo4j import Driver, GraphDatabase, Query, Record
+from neo4j import Driver, GraphDatabase, Record
 from typing_extensions import LiteralString
 
 from pkg.config import Neo4jKnowledgeGraphConfig
@@ -24,12 +24,6 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
                 os.environ.get("KNOWLEDGE_GRAPH_NEO4J_PASSWORD", default="neo4j"),
             ),
         )
-
-    def execute_query(self, query: str):
-        q = Query("")
-        q.text = query
-        records, a, b = self.driver.execute_query(q)
-        return records, a, b
 
     def get_conflicting_intents(
         self,

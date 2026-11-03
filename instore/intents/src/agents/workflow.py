@@ -48,11 +48,12 @@ class Workflow:
         # self.app = workflow.compile()
 
     def _notify_progress(self, tool_call: dict[str, str]):
-        if tool_call["name"] == "intent_database":
-            if "CREATE" in tool_call["args"]["cypher_query"]:
-                self.on_tool_callback("Creating a new intent")
-            else:
-                self.on_tool_callback("Searching the intent database")
+        if tool_call["name"] == "create_intent":
+            self.on_tool_callback("Creating a new intent")
+        elif tool_call["name"] == "delete_intent":
+            self.on_tool_callback("Deleting an intent")
+        elif tool_call["name"] in ("list_intents", "get_intent", "check_conflicts"):
+            self.on_tool_callback("Searching the intent database")
 
         elif tool_call["name"] == "recommendation_engine":
             self.on_tool_callback("Computing optimal placement of videos")

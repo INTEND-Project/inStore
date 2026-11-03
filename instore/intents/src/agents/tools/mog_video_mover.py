@@ -10,6 +10,20 @@ from pydantic import BaseModel, Field
 from pkg.utils.pretty_print import pretty_print
 
 
+def classify_action(source_node: str, destination_node: str) -> str:
+    """Classify a CSV row as purge (no destination), move (between origin tiers), or copy (origin to cache)."""
+    is_source_origin = "hot" in source_node or "cold" in source_node
+    is_destination_origin = "hot" in destination_node or "cold" in destination_node
+
+    if not destination_node:
+        return "purge"
+    if is_source_origin and is_destination_origin:
+        return "move"
+    if is_source_origin:
+        return "copy"
+    raise Exception("Unknown movement case")
+
+
 class VideoMoveInput(BaseModel):
     csv_file_path: str = Field(
         description="Path to the CSV file containing video files, their current lcoations, and their destination locations"
@@ -70,18 +84,7 @@ class VideoMover(BaseTool):
         destination_node = row[2].strip()
 
         api_base_url = os.environ.get("MOG_API_URL")
-        should_purge = destination_node is None or destination_node == ""
-        is_source_origin = "hot" in source_node or "cold" in source_node
-        is_destination_origin = "hot" in destination_node or "cold" in destination_node
-
-        if should_purge:
-            action = "purge"
-        elif is_source_origin and is_destination_origin:
-            action = "move"
-        elif is_source_origin:
-            action = "copy"
-        else:
-            raise Exception("Unknown movement case")
+        action = classify_action(source_node, destination_node)
 
         if self._is_dry_run():
             print(f"[DRY RUN] {action} {video_id}: {source_node} -> {destination_node or '(purged)'}")

@@ -10,7 +10,7 @@ from flask import Flask, Response, request
 from flask_cors import CORS
 from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
-from src.agents import Chatbot, IntentDatabase, RecommendationEngine, VideoMover, Workflow
+from src.agents import Chatbot, RecommendationEngine, VideoMover, Workflow, intent_tools
 from src.config import IntentManagerConfig
 
 from pkg.db import knowledge_graph_factory
@@ -28,9 +28,8 @@ def main(cfg_path: str):
 
     kg = knowledge_graph_factory(info=cfg.kg_info)
 
-    # TODO (Ali Amin): Use pre-determined cypher queries for intent creation
     tools: Sequence[BaseTool] = [
-        IntentDatabase(knowledge_graph=kg),
+        *intent_tools(knowledge_graph=kg),
         RecommendationEngine(),
         VideoMover(),
     ]

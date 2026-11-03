@@ -1,6 +1,8 @@
 import os
 
 from flask.testing import FlaskClient
+from werkzeug.test import EnvironBuilder
+from werkzeug.wrappers import Request
 from openapi_core import Config, OpenAPI
 from openapi_core.contrib.werkzeug import WerkzeugOpenAPIRequest, WerkzeugOpenAPIResponse
 from openapi_core.templating.paths.exceptions import OperationNotFound, PathNotFound
@@ -24,8 +26,20 @@ class SpecValidatingClient(FlaskClient):
 
     def open(self, *args, **kwargs):
         response = super().open(*args, **kwargs)
+        # Response validation needs the method, path, and headers of the request, but not its body, which the app
+        # already read. On Python 3.10, openapi-core reads the body again when checking the request type.
+        sent = response.request
+        request = Request(
+            EnvironBuilder(
+                method=sent.method,
+                path=sent.path,
+                query_string=sent.query_string.decode(),
+                headers=list(sent.headers),
+                base_url=sent.host_url,
+            ).get_environ()
+        )
         try:
-            openapi.validate_response(WerkzeugOpenAPIRequest(response.request), WerkzeugOpenAPIResponse(response))
+            openapi.validate_response(WerkzeugOpenAPIRequest(request), WerkzeugOpenAPIResponse(response))
         except (PathNotFound, OperationNotFound):
             # Routes that are not part of the API, e.g. unknown routes and CORS preflight requests
             pass

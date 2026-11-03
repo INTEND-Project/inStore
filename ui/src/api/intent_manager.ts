@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const apiUrl = import.meta.env.VITE_INTENT_MANAGER_URL;
+const apiUrl = `${import.meta.env.VITE_INTENT_MANAGER_URL}/api/v1`;
 
 export const submitQuery = async (
   text: string,
@@ -9,9 +9,9 @@ export const submitQuery = async (
   setFinalMessage: (msg: string) => void,
 ) => {
   try {
-    const response = await fetch(`${apiUrl}/intent`, {
+    const response = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
       method: "POST",
-      body: JSON.stringify({ expression: text, id: conversationId }),
+      body: JSON.stringify({ message: text }),
       headers: {
         "Content-Type": "application/json",
         Accept: "text/event-stream",
@@ -59,20 +59,16 @@ export const submitQuery = async (
 };
 
 export const getIntents = async () => {
-  const response = await axios.get(`${apiUrl}/intent`);
-  if (response.status != 200) {
-    throw new Error("Cannot reach intent manager");
-  } else {
-    console.log(response.data);
-    return response.data;
-  }
+  const response = await axios.get(`${apiUrl}/intents`);
+  return response.data;
 };
 
-export const getIntent = async (name: String) => {
-  const response = await axios.get(`${apiUrl}/intent/${name}`);
-  if (response.status != 200) {
-    throw new Error("Cannot reach intent manager");
-  } else {
-    return response.data;
-  }
+export const getIntent = async (name: string) => {
+  const response = await axios.get(`${apiUrl}/intents/${name}`);
+  return response.data;
+};
+
+export const getIntentActions = async (name: string) => {
+  const response = await axios.get(`${apiUrl}/intents/${name}/actions`);
+  return response.data;
 };

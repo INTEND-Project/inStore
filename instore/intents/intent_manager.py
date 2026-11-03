@@ -10,8 +10,10 @@ from flask import Flask, Response, request
 from flask_cors import CORS
 from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
-from src.agents import Chatbot, PlanStore, Workflow, build_system_prompt, intent_tools, plan_tools
+from src.agents import Chatbot, Workflow, build_system_prompt, intent_tools, plan_tools
 from src.config import IntentManagerConfig
+from src.plans import PlanStore
+from src.service import IntentService
 
 from pkg.db import knowledge_graph_factory
 from pkg.engines import engine_factory
@@ -36,10 +38,10 @@ def main(cfg_path: str):
     executor = executor_factory(info=cfg.use_case.executor, dry_run=dry_run)
     print(f"Recommendation engine: {type(engine).__name__}, executor: {type(executor).__name__}")
 
-    tools: Sequence[BaseTool] = [
-        *intent_tools(knowledge_graph=kg, engine=engine),
-        *plan_tools(engine=engine, executor=executor, knowledge_graph=kg, plan_store=PlanStore()),
-    ]
+    service = IntentService(
+        engine=engine, executor=executor, knowledge_graph=kg, plan_store=PlanStore(), model_name=llm.get_model()
+    )
+    tools: Sequence[BaseTool] = [*intent_tools(service), *plan_tools(service)]
 
     chatbot = Chatbot(llm=llm, tools=tools, system_prompt=build_system_prompt(engine))
 

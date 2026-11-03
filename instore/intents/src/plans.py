@@ -6,9 +6,7 @@ from typing import Optional
 
 from pkg.interfaces import Action
 
-
-class PlanError(Exception):
-    pass
+from .errors import NotFound, PlanAlreadyExecuted, PlanExpired
 
 
 @dataclass
@@ -19,6 +17,7 @@ class Plan:
     conflicts_with: list[str]
     actions: list[Action]
     created_at: datetime
+    expires_at: Optional[datetime] = None
     executed_at: Optional[datetime] = None
     intent_name: Optional[str] = None
 
@@ -36,7 +35,14 @@ class PlanStore:
 
     def add(self, objective: str, conflicts_with: list[str], actions: list[Action]) -> Plan:
         now = datetime.now(timezone.utc)
-        plan = Plan(id=str(uuid.uuid4()), objective=objective, conflicts_with=conflicts_with, actions=actions, created_at=now)
+        plan = Plan(
+            id=str(uuid.uuid4()),
+            objective=objective,
+            conflicts_with=conflicts_with,
+            actions=actions,
+            created_at=now,
+            expires_at=now + self._ttl,
+        )
         with self._lock:
             # Drop expired plans that were never executed
             self._plans = {k: p for k, p in self._plans.items() if p.executed_at or now - p.created_at <= self._ttl}
@@ -48,11 +54,11 @@ class PlanStore:
         with self._lock:
             plan = self._plans.get(plan_id)
             if plan is None:
-                raise PlanError(f"Plan {plan_id} not found, recommend a new plan")
+                raise NotFound(f"Plan {plan_id} not found, recommend a new plan")
             if plan.executed_at is not None:
-                raise PlanError(f"Plan {plan_id} was already executed as intent {plan.intent_name}")
+                raise PlanAlreadyExecuted(f"Plan {plan_id} was already executed as intent {plan.intent_name}")
             if datetime.now(timezone.utc) - plan.created_at > self._ttl:
-                raise PlanError(f"Plan {plan_id} expired, recommend a new plan")
+                raise PlanExpired(f"Plan {plan_id} expired, recommend a new plan")
             plan.executed_at = datetime.now(timezone.utc)
             return plan
 

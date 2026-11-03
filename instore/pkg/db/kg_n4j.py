@@ -93,7 +93,10 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
         start_from: Optional[str] = None,
         end_at: str = "never",
     ) -> str:
-        """Create an intent and one Command node per command, linked only to this intent. Returns the intent name."""
+        """Create an intent and one Command node per command, linked only to this intent. Returns the intent name.
+
+        Each command has cmd, content_id, source, destination, date_time, and optionally status and error.
+        """
         name = f"{objective.lower()}_{uuid.uuid4()}"
         start_from = start_from or datetime.now(timezone.utc).isoformat(timespec="seconds")
         # A single query runs in a single transaction, so the intent and its commands are created together
@@ -107,7 +110,9 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
                 content_id: cmd.content_id,
                 date_time: cmd.date_time,
                 source: cmd.source,
-                destination: cmd.destination
+                destination: cmd.destination,
+                status: cmd.status,
+                error: cmd.error
             })
             """,
             name=name,
@@ -206,7 +211,7 @@ class Neo4jKnowledgeGraph(KnowledgeGraph):
             "from": intent_node.get("from"),
             "to": intent_node.get("to"),
             "commands": [
-                {k: c.get(k) for k in ("date_time", "cmd", "content_id", "source", "destination")}
+                {k: c.get(k) for k in ("date_time", "cmd", "content_id", "source", "destination", "status", "error")}
                 for c in command_nodes
             ],
         }

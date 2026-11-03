@@ -10,7 +10,7 @@ from flask import Flask, Response, request
 from flask_cors import CORS
 from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
-from src.agents import Chatbot, RecommendationEngine, VideoMover, Workflow, intent_tools
+from src.agents import Chatbot, PlanStore, Workflow, intent_tools, plan_tools
 from src.config import IntentManagerConfig
 
 from pkg.db import knowledge_graph_factory
@@ -39,8 +39,7 @@ def main(cfg_path: str):
 
     tools: Sequence[BaseTool] = [
         *intent_tools(knowledge_graph=kg, engine=engine),
-        RecommendationEngine(engine=engine),
-        VideoMover(executor=executor),
+        *plan_tools(engine=engine, executor=executor, knowledge_graph=kg, plan_store=PlanStore()),
     ]
 
     chatbot = Chatbot(llm=llm, tools=tools)

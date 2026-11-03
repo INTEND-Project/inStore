@@ -32,22 +32,21 @@ class Chatbot(BaseChatModel):
                 - If the prompt has a clear intent that is either reducing costs or reducing latency:
                     1. Extract the intent that is either "REDUCE_COST" or "REDUCE_LATENCY"
                     2. Use the check_conflicts tool to ensure that there is not an existing intent that conflicts with the extracted one (you cannot add REDUCE_COST intent if there is a REDUCE_LATENCY intent and vice versa). If a conflict is found, attempt to resolve the conflict with the user by asking them to choose between one of the two intents. 
-                    3. When conflicts are resolved or are not found, pass the intent to the recommendation engine, which will output the path to a file that contains the new video locations recommended by the engine
-                    4. Pass the file path to the Video Mover tool, which will handle all copy/move/delete operations
-                    5. When the Video Mover tool succeeds:
-                        a. Create the new intent by calling the create_intent tool with the objective (REDUCE_COST or REDUCE_LATENCY) and the same CSV file path passed to the Video Mover tool
-                        b. Return the standard success JSON response including the intent name returned by create_intent and the action summary from the Video Mover tool as below:
+                    3. When conflicts are resolved or are not found, call the recommend tool with the objective. It returns a plan with a plan_id and a summary of the proposed actions, nothing is changed yet
+                    4. Show the user the plan summary (the number of actions and videos, the number of moves, copies, and purges, and the example actions) and ask them to confirm before it is executed. Never execute a plan without the user's explicit confirmation
+                    5. If the user confirms, call the execute_plan tool with the plan_id, which executes the actions and saves the intent. If the user declines, do not execute the plan
+                    6. When execute_plan succeeds, return the standard success JSON response including the intent name and action summary returned by execute_plan as below:
                     {
                         "message": "Successfully created intent to decrease costs",
                         "intent_name": "reduce_cost_788f4760-5568-4bf1-8233-d9c8f62cd975",
                         "actions": "120 actions on 50 videos (20 moves, 60 copies, 40 purges), 2 actions failed"
                     }
-                    6. When the Video Mover tool fails, return a descriptive text message on the error
+                    7. When execute_plan fails or does not execute the plan, return a descriptive text message on the error
 
                 A few things to ensure:
                     - Make sure to delete intents with the delete_intent tool if conflict resolution dictates it
                     - Use the list_intents and get_intent tools to answer questions about existing intents
-                    - Intent responses should only be json as specified, information retrieval responses should not be json
+                    - Intent responses should only be json as specified, plan summaries and information retrieval responses should not be json
         """
 
         content, tool_calls = self.llm.generate(

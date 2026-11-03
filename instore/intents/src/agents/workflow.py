@@ -48,21 +48,21 @@ class Workflow:
         # self.app = workflow.compile()
 
     def _notify_progress(self, tool_call: dict[str, str]):
-        if tool_call["name"] == "create_intent":
-            self.on_tool_callback("Creating a new intent")
-        elif tool_call["name"] == "delete_intent":
+        if tool_call["name"] == "delete_intent":
             self.on_tool_callback("Deleting an intent")
         elif tool_call["name"] in ("list_intents", "get_intent", "check_conflicts"):
             self.on_tool_callback("Searching the intent database")
 
-        elif tool_call["name"] == "recommendation_engine":
+        elif tool_call["name"] == "recommend":
             self.on_tool_callback("Computing optimal placement of videos")
-        elif tool_call["name"] == "video_mover":
+        elif tool_call["name"] == "execute_plan":
             self.on_tool_callback("Preparing origin storage and cache nodes")
             sleep(1)
             self.on_tool_callback("Moving videos between hot and cold storage")
             sleep(1)
             self.on_tool_callback("Copying videos to cache nodes")
+            sleep(1)
+            self.on_tool_callback("Saving the intent")
 
     def __call_chatbot(self, state: State):
         messages = state["messages"]

@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -8,8 +7,6 @@ from pydantic import BaseModel, Field
 
 from pkg.interfaces import KnowledgeGraph, RecommendationEngine
 from pkg.utils.pretty_print import pretty_print
-
-from .actions_csv import read_actions_csv
 
 OBJECTIVE_DESCRIPTION = 'The intent objective, either "REDUCE_COST" or "REDUCE_LATENCY"'
 
@@ -66,36 +63,6 @@ class CheckConflicts(BaseTool):
         return json.dumps([{"name": i["name"], "objective": i["objective"]} for i in conflicts])
 
 
-class CreateIntentInput(BaseModel):
-    objective: str = Field(description=OBJECTIVE_DESCRIPTION)
-    csv_file_path: str = Field(description="Path to the CSV file of video actions that was passed to the video mover")
-
-
-class CreateIntent(BaseTool):
-    name: str = "create_intent"
-    description: str = (
-        "Creates a new intent in the intent database with the video actions from the CSV file, returns the name of the created intent"
-    )
-    args_schema: Optional[ArgsSchema] = CreateIntentInput
-    knowledge_graph: KnowledgeGraph
-    engine: RecommendationEngine
-
-    def _run(self, objective: str, csv_file_path: str) -> str:
-        self.engine.get_objective(objective)
-        if not os.path.exists(csv_file_path):
-            raise ValueError(f"CSV file {csv_file_path} not found")
-
-        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        commands = [
-            {"cmd": a.type, "content_id": a.content_id, "source": a.source, "destination": a.destination, "date_time": now}
-            for a in read_actions_csv(csv_file_path)
-        ]
-
-        name = self.knowledge_graph.create_intent(objective=objective, commands=commands, start_from=now)
-        pretty_print(f"Created intent {name} with {len(commands)} commands", "Tool Message (Create Intent)")
-        return json.dumps({"intent_name": name, "commands": len(commands)})
-
-
 class DeleteIntent(BaseTool):
     name: str = "delete_intent"
     description: str = "Deletes an intent and its commands from the intent database"
@@ -113,6 +80,5 @@ def intent_tools(knowledge_graph: KnowledgeGraph, engine: RecommendationEngine) 
         ListIntents(knowledge_graph=knowledge_graph),
         GetIntent(knowledge_graph=knowledge_graph),
         CheckConflicts(knowledge_graph=knowledge_graph, engine=engine),
-        CreateIntent(knowledge_graph=knowledge_graph, engine=engine),
         DeleteIntent(knowledge_graph=knowledge_graph),
     ]

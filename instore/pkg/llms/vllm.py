@@ -18,8 +18,6 @@ class VLLM(LLM):
     timeout: Optional[int] = None
     stop: Optional[List[str]] = None
     max_retries: int = 2
-    tool_call_prefix: str = "[TOOL_CALL]"
-    tool_call_suffix: str = "[/TOOL_CALL]"
 
     def __init__(
         self,
@@ -38,11 +36,13 @@ class VLLM(LLM):
     def generate(
         self, system_prompt: str, user_prompt: str, tools: Sequence[BaseTool]
     ) -> tuple[str, List[Dict[str, Any]]]:
+        model_name = self.llm_config.model_name
+        vllm_url = self.llm_config.endpoint
         data = {
-            "model": self.llm_config.model_name,
-            "temperature": 0.8,
-            "top_p": 1.0,
-            "top_k": -1,
+            "model": model_name,
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 20,
             "tools": [
                 {
                     "type": "function",
@@ -68,32 +68,32 @@ class VLLM(LLM):
 
         try:
             response = requests.post(
-                url=self.llm_config.endpoint,
+                url=vllm_url,
                 json=data,
                 headers=headers,
                 timeout=10000,
             )
-            print(response.json())
             response.raise_for_status()
             reply = response.json()["choices"][0]["message"]
 
-            reply["reasoning_content"] = ""
-            content = reply["content"] if reply["content"] is not None else ""
+            # Some vLLM servers omit tool_calls when no tool is called, and send null content alongside tool calls
+            content = reply.get("content") or ""
             tool_calls = []
-            if reply["tool_calls"] is not None:
-                for tc in reply["tool_calls"]:
-                    tool_calls.append(
-                        {
-                            "name": tc["function"]["name"],
-                            "args": json.loads(tc["function"]["arguments"]),
-                            "id": tc["id"],
-                        }
-                    )
-
-            return content, tool_calls
+            for tc in reply.get("tool_calls") or []:
+                tool_calls.append(
+                    {
+                        "name": tc["function"]["name"],
+                        "args": json.loads(tc["function"]["arguments"]),
+                        "id": tc["id"],
+                    }
+                )
+            print(reply)
+            return (
+                content,
+                tool_calls,
+            )
 
         except requests.exceptions.HTTPError as err:
-
             print(err)
             raise HTTPError() from err
 

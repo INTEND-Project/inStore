@@ -5,7 +5,7 @@ langchain==0.3.24
 langgraph==0.3.29
 langsmith==0.3.30
 langchain_anthropic==0.3.10
-pydantic==2.11.3
+pydantic==2.12.5
 python-dotenv==1.1.0
 flask-cors==5.0.1
 FLask==3.1.0

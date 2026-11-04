@@ -1,0 +1,17 @@
+{
+  "port": 5001,
+  "llm_info": {
+    "provider": "vllm",
+    "config": {
+      "model_name": "OCTO_EU_LLM",
+      "model_name_pretty": "OCTO EU LLM",
+      "endpoint": "http://10.8.27.40:8000/v1/chat/completions"
+    }
+  },
+  "knowledge_graph": {
+    "provider": "neo4j",
+    "config": {
+      "url": "bolt://localhost:7687"
+    }
+  }
+}

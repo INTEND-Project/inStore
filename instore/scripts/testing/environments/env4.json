@@ -1,0 +1,863 @@
+{
+  "servers": [
+    {
+      "name": "HOT_Storage",
+
+      "type": "origin",
+      "location": "Europe",
+      "capacity_in_GB": 1000,
+      "avg_latency_ms": 200,
+      "costs_euro_per_gb_per_month": 0.05
+    },
+    {
+      "name": "COLD_Storage",
+      "type": "origin",
+      "location": "Europe",
+      "capacity_in_GB": 1000,
+
+      "avg_latency_ms": 2000,
+      "costs_euro_per_gb_per_month": 0.01
+    }
+  ],
+  "caches": [
+    {
+      "name": "LONDON_CACHE",
+      "type": "cache",
+      "capacity_in_GB": 235,
+      "avg_latency_ms": 15,
+      "costs_euro_per_gb_per_month": 0.5
+    },
+    {
+      "name": "PARIS_CACHE",
+      "type": "cache",
+      "capacity_in_GB": 264,
+      "avg_latency_ms": 8,
+      "costs_euro_per_gb_per_month": 0.4
+    },
+    {
+      "name": "ROME_CACHE",
+      "type": "cache",
+      "capacity_in_GB": 228,
+      "avg_latency_ms": 14,
+      "costs_euro_per_gb_per_month": 0.3
+    },
+    {
+      "name": "BERLIN_CAHCE",
+      "type": "cache",
+      "capacity_in_GB": 172,
+
+      "avg_latency_ms": 5,
+      "costs_euro_per_gb_per_month": 0.31
+    },
+
+    {
+      "name": "MADRID_CACHE",
+      "type": "cache",
+      "capacity_in_GB": 151,
+      "avg_latency_ms": 17,
+      "costs_euro_per_gb_per_month": 0.17
+    },
+    {
+      "name": "AMSTERDAM_CACHE",
+      "type": "cache",
+      "capacity_in_GB": 107,
+      "avg_latency_ms": 5,
+      "costs_euro_per_gb_per_month": 0.09
+    },
+    {
+      "name": "ATHENS_CACHE",
+      "type": "cache",
+      "capacity_in_GB": 169,
+      "avg_latency_ms": 18,
+      "costs_euro_per_gb_per_month": 0.22
+    },
+    {
+      "name": "VIENNA_CACHE",
+      "type": "cache",
+      "capacity_in_GB": 197,
+      "avg_latency_ms": 16,
+      "costs_euro_per_gb_per_month": 0.1
+    }
+  ],
+  "video": [
+    {
+      "video0": {
+        "size_gb": 4.5,
+        "locations_stored": [
+          "HOT_Storage",
+          "PARIS_CACHE",
+
+          "BERLIN_CAHCE",
+          "AMSTERDAM_CACHE",
+          "VIENNA_CACHE",
+          "MADRID_CACHE",
+          "ROME_CACHE",
+
+          "LONDON_CACHE"
+        ],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 298,
+            "Last_Month": 7549,
+            "Last_Year": 58299
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 380,
+            "Last_Month": 3788,
+            "Last_Year": 88238
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 410,
+
+            "Last_Month": 6536,
+            "Last_Year": 65549
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 369,
+            "Last_Month": 869,
+
+            "Last_Year": 38313
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 378,
+            "Last_Month": 2916,
+            "Last_Year": 63142
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 479,
+            "Last_Month": 7432,
+            "Last_Year": 71490
+          },
+          "ROME_CACHE": {
+            "Last_Week": 497,
+            "Last_Month": 3900,
+            "Last_Year": 28754
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 136,
+            "Last_Month": 7811,
+            "Last_Year": 86139
+          }
+        }
+      }
+    },
+    {
+      "video1": {
+        "size_gb": 18.9,
+
+        "locations_stored": ["COLD_Storage", "AMSTERDAM_CACHE"],
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 440,
+            "Last_Month": 6567,
+            "Last_Year": 42926
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 417,
+            "Last_Month": 1729,
+            "Last_Year": 74419
+          }
+        }
+      }
+    },
+    {
+      "video2": {
+        "size_gb": 1.7,
+        "locations_stored": ["HOT_Storage", "LONDON_CACHE"],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 241,
+            "Last_Month": 7611,
+            "Last_Year": 10319
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 203,
+            "Last_Month": 1982,
+            "Last_Year": 33284
+          }
+        }
+      }
+    },
+    {
+      "video3": {
+        "size_gb": 15.2,
+        "locations_stored": ["HOT_Storage"],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 460,
+            "Last_Month": 6181,
+            "Last_Year": 51383
+          }
+        }
+      }
+    },
+    {
+      "video4": {
+        "size_gb": 12.3,
+        "locations_stored": [
+          "HOT_Storage",
+          "ROME_CACHE",
+          "VIENNA_CACHE",
+          "ATHENS_CACHE",
+          "BERLIN_CAHCE",
+          "PARIS_CACHE"
+        ],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 467,
+            "Last_Month": 6818,
+            "Last_Year": 58726
+          },
+          "ROME_CACHE": {
+            "Last_Week": 467,
+            "Last_Month": 6835,
+            "Last_Year": 80525
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 478,
+            "Last_Month": 8633,
+            "Last_Year": 15589
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 346,
+            "Last_Month": 2168,
+            "Last_Year": 23033
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 215,
+            "Last_Month": 1906,
+            "Last_Year": 71610
+          },
+
+          "PARIS_CACHE": {
+            "Last_Week": 289,
+
+            "Last_Month": 5136,
+            "Last_Year": 98968
+          }
+        }
+      }
+    },
+    {
+      "video5": {
+        "size_gb": 14.6,
+        "locations_stored": ["COLD_Storage", "AMSTERDAM_CACHE", "BERLIN_CAHCE"],
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 455,
+            "Last_Month": 6040,
+            "Last_Year": 50728
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 466,
+            "Last_Month": 9864,
+            "Last_Year": 80199
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 273,
+            "Last_Month": 8504,
+            "Last_Year": 54936
+          }
+        }
+      }
+    },
+
+    {
+      "video6": {
+        "size_gb": 3.4,
+        "locations_stored": [
+          "COLD_Storage",
+          "PARIS_CACHE",
+          "LONDON_CACHE",
+
+          "BERLIN_CAHCE",
+          "ROME_CACHE",
+          "AMSTERDAM_CACHE",
+          "VIENNA_CACHE",
+          "ATHENS_CACHE"
+        ],
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 302,
+            "Last_Month": 3356,
+            "Last_Year": 38335
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 386,
+            "Last_Month": 9554,
+            "Last_Year": 46049
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 487,
+            "Last_Month": 8990,
+            "Last_Year": 21364
+          },
+
+          "BERLIN_CAHCE": {
+            "Last_Week": 497,
+            "Last_Month": 6494,
+            "Last_Year": 20862
+          },
+          "ROME_CACHE": {
+            "Last_Week": 320,
+            "Last_Month": 3556,
+            "Last_Year": 5882
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 381,
+            "Last_Month": 4135,
+            "Last_Year": 99563
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 370,
+            "Last_Month": 9697,
+            "Last_Year": 42523
+          },
+
+          "ATHENS_CACHE": {
+            "Last_Week": 446,
+            "Last_Month": 6002,
+            "Last_Year": 15419
+          }
+        }
+      }
+    },
+    {
+      "video7": {
+        "size_gb": 4.3,
+        "locations_stored": [
+          "HOT_Storage",
+          "AMSTERDAM_CACHE",
+          "MADRID_CACHE",
+          "ATHENS_CACHE",
+          "LONDON_CACHE",
+          "VIENNA_CACHE",
+
+          "PARIS_CACHE"
+        ],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 332,
+            "Last_Month": 9780,
+
+            "Last_Year": 5702
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 122,
+
+            "Last_Month": 7249,
+            "Last_Year": 28949
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 467,
+            "Last_Month": 2975,
+            "Last_Year": 7698
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 285,
+            "Last_Month": 8656,
+            "Last_Year": 89565
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 314,
+            "Last_Month": 2545,
+            "Last_Year": 63036
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 103,
+            "Last_Month": 9342,
+            "Last_Year": 49908
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 343,
+
+            "Last_Month": 5148,
+            "Last_Year": 76197
+          }
+        }
+      }
+    },
+    {
+      "video8": {
+        "size_gb": 10.2,
+        "locations_stored": [
+          "COLD_Storage",
+          "MADRID_CACHE",
+          "ATHENS_CACHE",
+          "BERLIN_CAHCE",
+          "AMSTERDAM_CACHE",
+          "LONDON_CACHE",
+          "ROME_CACHE"
+        ],
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 388,
+            "Last_Month": 7648,
+            "Last_Year": 75648
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 471,
+            "Last_Month": 3406,
+            "Last_Year": 78513
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 229,
+            "Last_Month": 9562,
+            "Last_Year": 70819
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 203,
+            "Last_Month": 5456,
+            "Last_Year": 21615
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 491,
+            "Last_Month": 8204,
+            "Last_Year": 57052
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 328,
+            "Last_Month": 1110,
+
+            "Last_Year": 77418
+          },
+          "ROME_CACHE": {
+            "Last_Week": 100,
+            "Last_Month": 6366,
+
+            "Last_Year": 73768
+          }
+        }
+      }
+    },
+
+    {
+      "video9": {
+        "size_gb": 18.1,
+        "locations_stored": [
+          "COLD_Storage",
+          "ROME_CACHE",
+          "MADRID_CACHE",
+
+          "AMSTERDAM_CACHE",
+          "PARIS_CACHE",
+          "VIENNA_CACHE",
+          "LONDON_CACHE",
+          "ATHENS_CACHE",
+          "BERLIN_CAHCE"
+        ],
+
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 248,
+            "Last_Month": 9450,
+            "Last_Year": 77727
+          },
+          "ROME_CACHE": {
+            "Last_Week": 331,
+
+            "Last_Month": 7100,
+            "Last_Year": 35903
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 403,
+            "Last_Month": 930,
+            "Last_Year": 40031
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 103,
+            "Last_Month": 4429,
+            "Last_Year": 31081
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 192,
+            "Last_Month": 1549,
+            "Last_Year": 95664
+          },
+
+          "VIENNA_CACHE": {
+            "Last_Week": 227,
+            "Last_Month": 9368,
+            "Last_Year": 56878
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 458,
+            "Last_Month": 9716,
+            "Last_Year": 72082
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 123,
+            "Last_Month": 2609,
+            "Last_Year": 23914
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 181,
+            "Last_Month": 5703,
+            "Last_Year": 86883
+          }
+        }
+      }
+    },
+    {
+      "video10": {
+        "size_gb": 13.1,
+        "locations_stored": [
+          "COLD_Storage",
+          "VIENNA_CACHE",
+          "PARIS_CACHE",
+          "LONDON_CACHE",
+
+          "AMSTERDAM_CACHE",
+          "ATHENS_CACHE",
+          "MADRID_CACHE"
+        ],
+
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 405,
+
+            "Last_Month": 9773,
+            "Last_Year": 23643
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 207,
+            "Last_Month": 5671,
+            "Last_Year": 77300
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 325,
+            "Last_Month": 1213,
+            "Last_Year": 87343
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 284,
+            "Last_Month": 8050,
+            "Last_Year": 8345
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 376,
+            "Last_Month": 9883,
+            "Last_Year": 21373
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 439,
+            "Last_Month": 2097,
+            "Last_Year": 52338
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 252,
+            "Last_Month": 9944,
+            "Last_Year": 75082
+          }
+        }
+      }
+    },
+    {
+      "video11": {
+        "size_gb": 19.1,
+        "locations_stored": ["HOT_Storage", "PARIS_CACHE"],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 325,
+
+            "Last_Month": 9998,
+            "Last_Year": 36339
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 193,
+            "Last_Month": 6671,
+            "Last_Year": 17587
+          }
+        }
+      }
+    },
+    {
+      "video12": {
+        "size_gb": 6.5,
+        "locations_stored": ["HOT_Storage", "VIENNA_CACHE"],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 360,
+            "Last_Month": 946,
+            "Last_Year": 85841
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 267,
+            "Last_Month": 3831,
+            "Last_Year": 33276
+          }
+        }
+      }
+    },
+    {
+      "video13": {
+        "size_gb": 3.0,
+        "locations_stored": ["HOT_Storage"],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 209,
+            "Last_Month": 9670,
+            "Last_Year": 61884
+          }
+        }
+      }
+    },
+    {
+      "video14": {
+        "size_gb": 8.2,
+        "locations_stored": [
+          "COLD_Storage",
+          "MADRID_CACHE",
+
+          "VIENNA_CACHE",
+          "ATHENS_CACHE",
+          "AMSTERDAM_CACHE"
+        ],
+
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 365,
+
+            "Last_Month": 3060,
+            "Last_Year": 71968
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 125,
+            "Last_Month": 6285,
+            "Last_Year": 12920
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 368,
+            "Last_Month": 1825,
+
+            "Last_Year": 76572
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 283,
+            "Last_Month": 2612,
+            "Last_Year": 97239
+          },
+          "AMSTERDAM_CACHE": {
+            "Last_Week": 474,
+            "Last_Month": 7227,
+            "Last_Year": 15332
+          }
+        }
+      }
+    },
+    {
+      "video15": {
+        "size_gb": 8.5,
+        "locations_stored": [
+          "COLD_Storage",
+          "MADRID_CACHE",
+          "LONDON_CACHE",
+          "BERLIN_CAHCE",
+          "VIENNA_CACHE",
+          "ATHENS_CACHE",
+          "PARIS_CACHE"
+        ],
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 243,
+
+            "Last_Month": 9530,
+            "Last_Year": 84372
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 110,
+            "Last_Month": 6714,
+            "Last_Year": 52811
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 343,
+            "Last_Month": 8140,
+
+            "Last_Year": 71586
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 455,
+            "Last_Month": 8971,
+            "Last_Year": 10137
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 248,
+
+            "Last_Month": 2678,
+            "Last_Year": 22155
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 267,
+            "Last_Month": 5396,
+            "Last_Year": 62112
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 472,
+            "Last_Month": 532,
+            "Last_Year": 81550
+          }
+        }
+      }
+    },
+    {
+      "video16": {
+        "size_gb": 8.8,
+        "locations_stored": [
+          "HOT_Storage",
+
+          "PARIS_CACHE",
+          "MADRID_CACHE",
+          "BERLIN_CAHCE",
+
+          "LONDON_CACHE"
+        ],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 300,
+            "Last_Month": 2739,
+            "Last_Year": 79422
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 375,
+            "Last_Month": 3958,
+            "Last_Year": 90768
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 289,
+
+            "Last_Month": 1962,
+            "Last_Year": 83729
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 418,
+            "Last_Month": 5946,
+            "Last_Year": 26802
+          },
+          "LONDON_CACHE": {
+            "Last_Week": 280,
+            "Last_Month": 2800,
+            "Last_Year": 70787
+          }
+        }
+      }
+    },
+
+    {
+      "video17": {
+        "size_gb": 15.4,
+        "locations_stored": ["COLD_Storage"],
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 273,
+            "Last_Month": 5372,
+            "Last_Year": 86173
+          }
+        }
+      }
+    },
+    {
+      "video18": {
+        "size_gb": 19.9,
+
+        "locations_stored": [
+          "COLD_Storage",
+          "MADRID_CACHE",
+          "ATHENS_CACHE",
+
+          "PARIS_CACHE",
+          "ROME_CACHE",
+          "BERLIN_CAHCE",
+          "VIENNA_CACHE",
+          "LONDON_CACHE"
+        ],
+
+        "Requests_by_Location": {
+          "COLD_Storage": {
+            "Last_Week": 438,
+
+            "Last_Month": 4087,
+            "Last_Year": 91082
+          },
+          "MADRID_CACHE": {
+            "Last_Week": 323,
+            "Last_Month": 898,
+            "Last_Year": 79055
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 213,
+            "Last_Month": 943,
+            "Last_Year": 52786
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 190,
+            "Last_Month": 6134,
+            "Last_Year": 52134
+          },
+          "ROME_CACHE": {
+            "Last_Week": 437,
+            "Last_Month": 5604,
+            "Last_Year": 80433
+          },
+          "BERLIN_CAHCE": {
+            "Last_Week": 311,
+            "Last_Month": 2034,
+            "Last_Year": 52516
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 100,
+            "Last_Month": 6281,
+            "Last_Year": 62760
+          },
+
+          "LONDON_CACHE": {
+            "Last_Week": 430,
+            "Last_Month": 4662,
+            "Last_Year": 99298
+          }
+        }
+      }
+    },
+    {
+      "video19": {
+        "size_gb": 18.8,
+
+        "locations_stored": [
+          "HOT_Storage",
+          "PARIS_CACHE",
+          "ROME_CACHE",
+          "VIENNA_CACHE",
+          "ATHENS_CACHE"
+        ],
+        "Requests_by_Location": {
+          "HOT_Storage": {
+            "Last_Week": 180,
+            "Last_Month": 8292,
+            "Last_Year": 89786
+          },
+          "PARIS_CACHE": {
+            "Last_Week": 484,
+            "Last_Month": 6384,
+
+            "Last_Year": 66893
+          },
+          "ROME_CACHE": {
+            "Last_Week": 131,
+            "Last_Month": 3501,
+            "Last_Year": 43962
+          },
+          "VIENNA_CACHE": {
+            "Last_Week": 412,
+            "Last_Month": 9755,
+            "Last_Year": 19795
+          },
+          "ATHENS_CACHE": {
+            "Last_Week": 177,
+
+            "Last_Month": 1274,
+            "Last_Year": 75027
+          }
+        }
+      }
+    }
+  ]
+}

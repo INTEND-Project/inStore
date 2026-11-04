@@ -1,16 +1,22 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 from neo4j import Record
 
 
 class KnowledgeGraph(ABC):
     @abstractmethod
-    def create_intent(self, user_name: str, intent_name: str, commands: list[str]):
+    def create_intent(
+        self,
+        objective: str,
+        commands: list[dict[str, str]],
+        start_from: Optional[str] = None,
+        end_at: str = "never",
+    ) -> str:
         pass
 
     @abstractmethod
-    def delete_intent(self, intent_name: str):
+    def delete_intent(self, intent_name: str) -> bool:
         pass
 
     @abstractmethod
@@ -34,13 +40,27 @@ class KnowledgeGraph(ABC):
         pass
 
     @abstractmethod
-    def get_intents(self) -> list[Record]:  # TODO: Create type here instead of Record
+    def get_intents(self) -> list[dict[str, Any]]:
         pass
 
     @abstractmethod
-    def get_topology(self, region: str = "all") -> list[dict[str, Any]]:
+    def get_conflicting_intents(
+        self, objectives: list[str], start_time: str, end_time: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         pass
 
     @abstractmethod
-    def execute_query(self, query: str) -> Any:
+    def get_intent(self, name: str) -> Optional[dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    def get_device(self, name: str) -> object:
+        pass
+
+    @abstractmethod
+    def get_topology(self, region: str = "ALL") -> list[dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    def is_healthy(self) -> bool:
         pass

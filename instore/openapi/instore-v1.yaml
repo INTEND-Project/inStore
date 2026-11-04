@@ -1,0 +1,639 @@
+openapi: 3.0.3
+info:
+  title: inStore Intent Management API
+  version: 1.0.0
+  description: |
+    inStore manages storage environments from intents, such as reducing cost or latency. The API exposes
+    the same capabilities as the inStore agent to other tools.
+
+    **Use cases.** A deployment runs one use case, made of a recommendation engine, which decides the
+    storage actions (moves, copies, and purges) that achieve an objective, and an executor, which carries
+    them out. `GET /api/v1/capabilities` describes the use case of a deployment and its objectives. In a
+    dry run, the engine plans against mock data and the executor only logs the actions.
+
+    **Creating an intent** takes two steps, so a client can review a plan before anything changes:
+
+    1. `POST /api/v1/recommendations` computes a plan for an objective. Nothing is changed.
+    2. `POST /api/v1/recommendations/{plan_id}/execute` executes the plan and saves it as an intent, with
+       the result of each action.
+
+    **Conflicts.** Each objective declares the objectives it conflicts with. Executing a plan fails with
+    `409 conflicting_intents` while a conflicting intent exists. To replace it, delete the conflicting
+    intent with `DELETE /api/v1/intents/{name}`, then execute the plan.
+
+    **Conversations.** `POST /api/v1/conversations/{conversation_id}/messages` lets users express intents
+    in natural language to the inStore agent, which follows the same steps and asks the user to confirm a
+    plan before executing it.
+
+    **Errors** use one JSON format, see the `Error` schema.
+servers:
+  - url: /
+    description: The intent manager serving this spec
+  - url: http://localhost:5001
+    description: Local deployment with Docker Compose
+security:
+  # The API key is required only when the deployment sets INSTORE_API_KEY
+  - {}
+  - ApiKeyAuth: []
+tags:
+  - name: Service
+    description: Health and capabilities of the deployment
+  - name: Intents
+    description: Intents managed by inStore and the actions they ran
+  - name: Recommendations
+    description: Plans of storage actions, and their execution as intents
+  - name: Conversations
+    description: Natural language conversations with the inStore agent
+  - name: Legacy
+    description: Routes used before /api/v1, kept for compatibility
+paths:
+  /api/v1/health:
+    get:
+      tags: [Service]
+      operationId: getHealth
+      summary: Health of the deployment
+      description: Never requires an API key.
+      security: []
+      responses:
+        "200":
+          description: The deployment is healthy
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+        "503":
+          description: The intent database is unreachable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+
+  /api/v1/openapi.yaml:
+    get:
+      tags: [Service]
+      operationId: getOpenApiSpec
+      summary: This OpenAPI spec
+      description: Never requires an API key.
+      security: []
+      responses:
+        "200":
+          description: The OpenAPI spec of the API
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  /api/v1/docs:
+    get:
+      tags: [Service]
+      operationId: getApiDocs
+      summary: Interactive documentation of the API (Swagger UI)
+      description: |
+        Never requires an API key. The page loads Swagger UI from a CDN, so the browser needs internet access.
+      security: []
+      responses:
+        "200":
+          description: The documentation page
+          content:
+            text/html:
+              schema: { type: string }
+
+  /api/v1/capabilities:
+    get:
+      tags: [Service]
+      operationId: getCapabilities
+      summary: Use case, objectives, and components of the deployment
+      responses:
+        "200":
+          description: Capabilities of the deployment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Capabilities" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/v1/intents:
+    get:
+      tags: [Intents]
+      operationId: listIntents
+      summary: List intents
+      parameters:
+        - name: objective
+          in: query
+          required: false
+          description: Only return intents with this objective
+          schema: { type: string }
+      responses:
+        "200":
+          description: Intents
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Intent" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/v1/intents/{name}:
+    parameters:
+      - $ref: "#/components/parameters/IntentName"
+    get:
+      tags: [Intents]
+      operationId: getIntent
+      summary: Get an intent
+      responses:
+        "200":
+          description: The intent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Intent" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Intents]
+      operationId: deleteIntent
+      summary: Delete an intent
+      description: |
+        Deletes the intent and the record of its actions. The storage changes made by its actions are not
+        undone.
+      responses:
+        "204":
+          description: The intent was deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/intents/{name}/actions:
+    parameters:
+      - $ref: "#/components/parameters/IntentName"
+    get:
+      tags: [Intents]
+      operationId: listIntentActions
+      summary: List the actions an intent ran
+      responses:
+        "200":
+          description: Actions of the intent, with the result of each
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/IntentAction" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/recommendations:
+    post:
+      tags: [Recommendations]
+      operationId: createRecommendation
+      summary: Compute a plan for an objective
+      description: |
+        Computes the storage actions that achieve the objective and stores them as a plan. Nothing is
+        changed. The plan can be executed until `expires_at`, 30 minutes after it is created.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecommendationRequest" }
+            example: { objective: REDUCE_COST }
+      responses:
+        "201":
+          description: The plan
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Plan" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "502": { $ref: "#/components/responses/UpstreamError" }
+
+  /api/v1/recommendations/{plan_id}/execute:
+    parameters:
+      - name: plan_id
+        in: path
+        required: true
+        description: The plan_id returned when the plan was computed
+        schema: { type: string }
+    post:
+      tags: [Recommendations]
+      operationId: executeRecommendation
+      summary: Execute a plan and save it as an intent
+      description: |
+        Checks again that no conflicting intent exists, executes the plan, and saves it as an intent with
+        the result of each action. An intent is saved when at least one action succeeded. A plan can be
+        executed once. When the executor fails before running any action, the plan can be executed again.
+      responses:
+        "201":
+          description: The plan was executed and saved as an intent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExecutionResult" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: |
+            The plan conflicts with existing intents (`conflicting_intents`, the conflicting intents are in
+            `details`), or it was already executed (`plan_already_executed`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "410":
+          description: The plan expired (`plan_expired`), compute a new plan
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "502":
+          description: |
+            Every action failed and no intent was saved (`execution_failed`, the result of each action is in
+            `details`), or the executor failed (`upstream_error`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/conversations/{conversation_id}/messages:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    post:
+      tags: [Conversations]
+      operationId: sendMessage
+      summary: Send a message to the inStore agent
+      description: |
+        Sends a message in a conversation, identified by an id chosen by the client, and streams the
+        agent's progress and reply as Server-Sent Events. The agent remembers earlier messages of the same
+        conversation while the intent manager runs.
+
+        Each event is a `data:` line with a JSON object, see `ConversationEvent`. The stream contains
+        `tool_call` events while the agent works, and ends with one `response` or `error` event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MessageRequest" }
+            example: { message: I want to reduce my storage costs }
+      responses:
+        "200":
+          description: Stream of conversation events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                data: {"type": "tool_call", "message": "Computing a plan"}
+
+                data: {"type": "response", "reply": "Here is the plan to reduce your storage costs: ..."}
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /intent:
+    get:
+      tags: [Legacy]
+      operationId: legacyListIntents
+      deprecated: true
+      summary: List intents with their commands
+      description: Use `GET /api/v1/intents` and `GET /api/v1/intents/{name}/actions`.
+      responses:
+        "200":
+          description: Intents
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/LegacyIntent" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Legacy]
+      operationId: legacySendMessage
+      deprecated: true
+      summary: Send a message to the inStore agent
+      description: Use `POST /api/v1/conversations/{conversation_id}/messages`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expression: { type: string, description: The message }
+                id: { type: string, description: The conversation id }
+      responses:
+        "200":
+          description: Stream of conversation events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /intent/{name}:
+    parameters:
+      - $ref: "#/components/parameters/IntentName"
+    get:
+      tags: [Legacy]
+      operationId: legacyGetIntent
+      deprecated: true
+      summary: Get an intent with its commands
+      description: Use `GET /api/v1/intents/{name}` and `GET /api/v1/intents/{name}/actions`.
+      responses:
+        "200":
+          description: The intent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LegacyIntent" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404":
+          description: The intent does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+
+  /device/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Legacy]
+      operationId: legacyGetDevice
+      deprecated: true
+      summary: Get a storage device
+      description: Not functional, devices are not part of /api/v1.
+      responses:
+        "200":
+          description: The device properties
+          content:
+            application/json:
+              schema: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Required on every operation except the health check and the API documentation when the deployment
+        sets INSTORE_API_KEY.
+
+  parameters:
+    IntentName:
+      name: name
+      in: path
+      required: true
+      description: Name of the intent, e.g. reduce_cost_788f4760-5568-4bf1-8233-d9c8f62cd975
+      schema: { type: string }
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      description: Conversation id chosen by the client, e.g. a UUID. Use a new id to start a new conversation.
+      schema: { type: string }
+
+  responses:
+    InvalidRequest:
+      description: The request is invalid (`invalid_request`), e.g. an unknown objective or a malformed body
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: The API key is missing or wrong (`unauthorized`)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: The intent or plan does not exist (`not_found`)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    UpstreamError:
+      description: The recommendation engine or executor failed (`upstream_error`), e.g. the storage environment is unavailable
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Health:
+      type: object
+      required: [status, knowledge_graph, dry_run]
+      properties:
+        status: { type: string, enum: [ok, unavailable] }
+        knowledge_graph:
+          type: string
+          enum: [ok, unreachable]
+          description: Whether the intent database is reachable
+        dry_run:
+          type: boolean
+          description: Whether actions are only logged instead of being executed
+
+    Capabilities:
+      type: object
+      required: [domain, content_label, objectives, recommendation_engine, executor, dry_run, model]
+      properties:
+        domain:
+          type: string
+          description: The storage environment the deployment manages
+          example: the Content Delivery Network (CDN) of a video streaming service, where each video is stored in hot or cold origin storage and can be copied to regional cache nodes
+        content_label:
+          type: string
+          description: Plural name of the content the actions apply to
+          example: videos
+        objectives:
+          type: array
+          items: { $ref: "#/components/schemas/Objective" }
+        recommendation_engine: { type: string, example: MogCdnEngine }
+        executor: { type: string, example: MogExecutor }
+        dry_run: { type: boolean }
+        model:
+          type: string
+          nullable: true
+          description: The LLM used by the agent
+          example: OCTO EU LLM
+
+    Objective:
+      type: object
+      required: [name, description, conflicts_with]
+      properties:
+        name: { type: string, example: REDUCE_COST }
+        description:
+          type: string
+          example: Reduce storage and delivery costs by keeping fewer videos in hot storage and caches
+        conflicts_with:
+          type: array
+          description: Objectives that cannot be active at the same time as this one
+          items: { type: string }
+          example: [REDUCE_LATENCY]
+
+    Intent:
+      type: object
+      required: [name, objective, active_from, active_until, action_count, failed_action_count]
+      properties:
+        name: { type: string, example: reduce_cost_788f4760-5568-4bf1-8233-d9c8f62cd975 }
+        objective: { type: string, example: REDUCE_COST }
+        active_from: { type: string, format: date-time, nullable: true }
+        active_until:
+          type: string
+          format: date-time
+          nullable: true
+          description: null when the intent has no end
+        action_count: { type: integer, minimum: 0 }
+        failed_action_count: { type: integer, minimum: 0 }
+
+    ActionType:
+      type: string
+      enum: [move, copy, purge]
+      description: |
+        `move` moves content between storage locations, `copy` copies it to another location (e.g. a cache),
+        and `purge` removes it from a location.
+
+    PlannedAction:
+      type: object
+      required: [type, content_id, source, destination]
+      properties:
+        type: { $ref: "#/components/schemas/ActionType" }
+        content_id: { type: string, example: a_hora_da_estrela.720p.mp4 }
+        source: { type: string, example: cold }
+        destination:
+          type: string
+          description: Empty for purge actions
+          example: hot
+
+    ActionResult:
+      allOf:
+        - $ref: "#/components/schemas/PlannedAction"
+        - type: object
+          required: [status, error]
+          properties:
+            status: { type: string, enum: [succeeded, failed] }
+            error: { type: string, nullable: true }
+
+    IntentAction:
+      allOf:
+        - $ref: "#/components/schemas/PlannedAction"
+        - type: object
+          required: [executed_at, status, error]
+          properties:
+            executed_at: { type: string, format: date-time, nullable: true }
+            status:
+              type: string
+              enum: [succeeded, failed]
+              nullable: true
+              description: null for intents saved before action results were recorded
+            error: { type: string, nullable: true }
+
+    RecommendationRequest:
+      type: object
+      required: [objective]
+      properties:
+        objective:
+          type: string
+          minLength: 1
+          description: One of the objectives listed by GET /api/v1/capabilities
+        params:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Engine specific parameters, none are defined by the MOG CDN engine
+
+    Plan:
+      type: object
+      required: [plan_id, objective, created_at, expires_at, summary, actions]
+      properties:
+        plan_id: { type: string }
+        objective: { type: string, example: REDUCE_COST }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        summary:
+          type: object
+          required: [action_count, content_count, by_type]
+          properties:
+            action_count: { type: integer, minimum: 0, example: 47 }
+            content_count:
+              type: integer
+              minimum: 0
+              description: Number of distinct content items the actions apply to
+              example: 21
+            by_type:
+              type: object
+              additionalProperties: { type: integer }
+              example: { move: 13, copy: 18, purge: 16 }
+        actions:
+          type: array
+          items: { $ref: "#/components/schemas/PlannedAction" }
+
+    ExecutionResult:
+      type: object
+      required: [intent_name, summary, actions]
+      properties:
+        intent_name: { type: string, example: reduce_cost_788f4760-5568-4bf1-8233-d9c8f62cd975 }
+        summary:
+          type: string
+          example: 47 actions on 21 videos (13 moves, 18 copies, 16 purges), 0 actions failed
+        actions:
+          type: array
+          items: { $ref: "#/components/schemas/ActionResult" }
+
+    MessageRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string, minLength: 1 }
+
+    ConversationEvent:
+      description: Payload of each Server-Sent Event of a conversation
+      oneOf:
+        - type: object
+          required: [type, message]
+          description: Progress of the agent, e.g. "Computing a plan"
+          properties:
+            type: { type: string, enum: [tool_call] }
+            message: { type: string }
+        - type: object
+          required: [type, reply]
+          description: The agent's reply, the last event of the stream
+          properties:
+            type: { type: string, enum: [response] }
+            reply: { type: string }
+        - type: object
+          required: [type, message]
+          description: The agent failed, the last event of the stream
+          properties:
+            type: { type: string, enum: [error] }
+            message: { type: string }
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+              description: |
+                `invalid_request`, `unauthorized`, `not_found`, `conflicting_intents`, `plan_already_executed`,
+                `plan_expired`, `execution_failed`, `upstream_error`, or `internal_error`
+            message: { type: string }
+            details:
+              type: array
+              nullable: true
+              description: |
+                The conflicting intents for `conflicting_intents`, the result of each action for
+                `execution_failed`, and the validation errors of the request body for `invalid_request`
+              items: { type: object }
+
+    LegacyIntent:
+      type: object
+      properties:
+        name: { type: string }
+        objective: { type: string }
+        from: { type: string, nullable: true }
+        to: { type: string, nullable: true }
+        commands:
+          type: array
+          items:
+            type: object
+            properties:
+              date_time: { type: string, nullable: true }
+              cmd: { type: string }
+              content_id: { type: string }
+              source: { type: string }
+              destination: { type: string }
+              status: { type: string, nullable: true }
+              error: { type: string, nullable: true }

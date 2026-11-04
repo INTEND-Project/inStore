@@ -4,13 +4,27 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-    - neo4j
+      - neo4j
     environment:
-      ANALYTICS_ENV: '2'
+      # Config file selection, default kept in sync with the Dockerfile ENV
+      INSTORE_CONFIG: ${INSTORE_CONFIG:-./intents/config-docker.json}
+      # LLM backends
+      NT_BEARER_TOKEN:
+      GEMINI_API_KEY:
+      # Intent database
+      KNOWLEDGE_GRAPH_NEO4J_URL: bolt://neo4j:7687
+      KNOWLEDGE_GRAPH_NEO4J_USERNAME:
+      KNOWLEDGE_GRAPH_NEO4J_PASSWORD:
+      # MOG API
+      MOG_API_URL:
+      MOG_DRY_RUN:
+      # Optional API key for the intent manager
+      INSTORE_API_KEY:
 
   neo4j:
     image: neo4j
     ports:
       - "7687:7687"
+      - "7474:7474"
     environment:
       NEO4J_AUTH: none

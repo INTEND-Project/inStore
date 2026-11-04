@@ -1,103 +1,52 @@
 import argparse
 import json
 import os
-from typing import Any, Sequence
+from typing import Callable, Sequence
 
 from dotenv import load_dotenv
-from flask import Flask, Response, request
-from flask_cors import CORS
-from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
-from src.agents import (
-    AnalyticsTool,
-    Chatbot,
-    IntentDatabase,
-    RecommendationEngine,
-    StorageController,
-    TopologyRetriever,
-    Workflow,
-)
+from src.agents import Chatbot, Workflow, build_system_prompt, intent_tools, plan_tools
+from src.api import create_app
 from src.config import IntentManagerConfig
+from src.plans import PlanStore
+from src.service import IntentService
 
 from pkg.db import knowledge_graph_factory
+from pkg.engines import engine_factory
+from pkg.executors import executor_factory
 from pkg.llms import llm_factory
 
 
 def main(cfg_path: str):
-    app = Flask(__name__)
-    CORS(app)
-
-    load_dotenv()
-    environment = os.environ.get("ANALYTICS_ENV", default="1")
+    print(f"Loading config: {cfg_path}")
     cfg = IntentManagerConfig(cfg=load_config(cfg_path))
 
     llm = llm_factory(llm_info=cfg.llm_info)
 
     kg = knowledge_graph_factory(info=cfg.kg_info)
 
-    analytics = AnalyticsTool(environment=environment)
-    tools: Sequence[BaseTool] = [
-        RecommendationEngine(),
-        IntentDatabase(knowledge_graph=kg),
-        TopologyRetriever(knowledge_graph=kg),
-        analytics,
-        StorageController(),
-    ]
+    # In a dry run, the engine plans against mock data and the actions are logged instead of executed
+    dry_run = os.environ.get("MOG_DRY_RUN", "").lower() in ("true", "1")
+    engine = engine_factory(info=cfg.use_case.engine, dry_run=dry_run)
+    executor = executor_factory(info=cfg.use_case.executor, dry_run=dry_run)
+    print(f"Recommendation engine: {type(engine).__name__}, executor: {type(executor).__name__}")
 
-    for n, _ in analytics.all_environments[environment]["avg_latency_ms"].items():
-        node = n.lower()
-        device_type = "cache" if "cache" in node else "cold" if "cold" in node else "hot"
-        size = "256" if device_type == "cache" else "1024" if device_type == "hot" else "10000"
-        location = (
-            "dublin" if "dublin" in node else "berlin" if "berlin" in node else "paris" if "paris" in node else "us"
-        )
-        kg.create_device(
-            device_name=node,
-            device_type=device_type,
-            max_capacity_gb=size,
-            allocated_capacity_gb="124",
-            backend="minio",
-            geolocation=location,
-        )
+    service = IntentService(
+        engine=engine, executor=executor, knowledge_graph=kg, plan_store=PlanStore(), model_name=llm.get_model()
+    )
+    tools: Sequence[BaseTool] = [*intent_tools(service), *plan_tools(service)]
 
-    chatbot = Chatbot(llm=llm, tools=tools)
-    w = Workflow(chatbot=chatbot, tools=tools)
+    chatbot = Chatbot(llm=llm, tools=tools, system_prompt=build_system_prompt(engine))
 
-    @app.route("/intent", methods=["POST"])
-    def add_new_intent():
-        j = request.get_json()
-        res = w.run(j)
-        tool_calls = []
-        cmds = []
-        for msg in res["messages"]:
-            if isinstance(msg, AIMessage) and msg.tool_calls is not None and len(msg.tool_calls) > 0:
-                for call in msg.tool_calls:
-                    tool_calls.append(call["name"])
-                    if call["name"] == "StorageController":
-                        if "StorageController" in tool_calls:
-                            cmds = [call["args"]]
-                        else:
-                            cmds.append(call["args"])
+    def run_conversation(conversation_id: str, message: str, on_tool_call: Callable[[str], None]) -> str:
+        workflow = Workflow(chatbot=chatbot, tools=tools, on_tool_callback=on_tool_call)
+        result = workflow.run({"expression": message, "id": conversation_id})
+        return result["messages"][-1].content
 
-        response = json.dumps(
-            {
-                "cmds": cmds,
-                "tool_calls": tool_calls,
-                "reply": res["messages"][-1].content,
-            }
-        )
-
-        return Response(status=200, response=response)
-
-    @app.route("/intent", methods=["GET"])
-    def get_intents():
-        res = kg.get_intents()
-        response: list[dict[str, Any]] = []
-        for r in res:
-            response.append(r.data())
-
-        return Response(status=200, response=json.dumps(response))
-
+    # Optional, when set every route except the health check requires it in the X-API-Key header
+    api_key = os.environ.get("INSTORE_API_KEY") or None
+    print(f"API key required: {api_key is not None}")
+    app = create_app(service=service, run_conversation=run_conversation, api_key=api_key)
     app.run(host="0.0.0.0", port=5001)
 
 
@@ -108,13 +57,16 @@ def load_config(file_path: str):
 
 
 if __name__ == "__main__":
+    # Loaded before parsing arguments so INSTORE_CONFIG can be set in .env
+    load_dotenv()
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c",
         "--cfg",
-        help="config file path",
+        help="config file path, defaults to the INSTORE_CONFIG env var or intents/config.json",
         type=str,
-        default="intents/config.json",
+        default=os.environ.get("INSTORE_CONFIG") or "intents/config.json",
     )
     args = parser.parse_args()
     main(args.cfg)

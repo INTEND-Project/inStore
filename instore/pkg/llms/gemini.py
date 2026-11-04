@@ -19,37 +19,29 @@ class GeminiLLM(LLM):
     def generate(
         self, system_prompt: str, user_prompt: str, tools: Sequence[BaseTool]
     ) -> tuple[str, List[Dict[str, Any]]]:
+        api_key = os.environ.get("GEMINI_API_KEY")
         data = {
-            "contents": {
-                "role": "user",
-                "parts": {
-                    "text": user_prompt,
-                },
-            },
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": user_prompt}],
+                }
+            ],
             "system_instruction": {
-                "parts": [
-                    {
-                        "text": system_prompt,
-                    },
-                ],
+                "parts": [{"text": system_prompt}],
             },
             "tools": [{"functionDeclarations": self._parameters_from_tools(tools)}],
-            "generationConfig": {
-                "temperature": 0.8,
-                "topP": 1.0,
-            },
         }
 
-        headers = {"Content-Type": "application/json"}
-
+        headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
         try:
-            api_key = os.environ.get("GEMINI_API_KEY")
             response = requests.post(
-                url=f"{self.llm_config.endpoint}/{self.llm_config.model_name}:generateContent?key={api_key}",
+                url=self.llm_config.endpoint,
                 json=data,
                 headers=headers,
-                timeout=10000,
+                timeout=60,
             )
+            print("done")
 
             response.raise_for_status()
 
@@ -57,6 +49,9 @@ class GeminiLLM(LLM):
 
             content: str = ""
             tool_calls: list[dict[str, Any]] = []
+            if "content" not in reply:
+                print(data)
+                print(f"\n\n\n{reply}\n\n\n")
             parts: list[dict[str, Any]] = reply["content"]["parts"]
             for part in parts:
                 if list(part.keys())[0] == "functionCall":

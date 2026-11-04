@@ -1,0 +1,698 @@
+[
+  {
+    "videoid": 1,
+    "key": "a_hora_da_estrela.720p.mp4",
+    "prediction": 5,
+    "views": 2400,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 5,
+        "views": 900,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 4,
+        "views": 600,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 5,
+        "views": 800,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 2,
+    "key": "trajetorias_ep_01_ana_mae.720p.mp4",
+    "prediction": 4,
+    "views": 950,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 4,
+        "views": 300,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 80,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 2,
+        "views": 20,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 3,
+    "key": "trajetorias_ep_05_lia_rodrigues.720p.mp4",
+    "prediction": 3,
+    "views": 450,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 120,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 30,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 4,
+        "views": 200,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 4,
+    "key": "trajetorias_ep_08_sueli_carneiro.720p.mp4",
+    "prediction": 3,
+    "views": 120,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 60,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 2,
+        "views": 15,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 70,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 5,
+    "key": "camarim_em_cena_t1_ep07_tadashi_endo.720p.mp4",
+    "prediction": 2,
+    "views": 90,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 2,
+        "views": 10,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 1,
+        "views": 5,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 55,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 6,
+    "key": "a_vida_comeca_e2.720p.mp4",
+    "prediction": 1,
+    "views": 15,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 1,
+        "views": 2,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 1,
+        "views": 1,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 1,
+        "views": 3,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 7,
+    "key": "orun_aiye_a_criacao_do_mundo_tr.720p.mp4",
+    "prediction": 4,
+    "views": 700,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 90,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 4,
+        "views": 250,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 40,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 8,
+    "key": "cidade_de_deus_trailer.720p.mp4",
+    "prediction": 5,
+    "views": 3100,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 5,
+        "views": 1200,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 5,
+        "views": 1000,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 5,
+        "views": 900,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 9,
+    "key": "auto_da_compadecida.720p.mp4",
+    "prediction": 4,
+    "views": 1300,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 4,
+        "views": 400,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 100,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 4,
+        "views": 350,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 10,
+    "key": "central_do_brasil.720p.mp4",
+    "prediction": 3,
+    "views": 310,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 50,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 51,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 2,
+        "views": 30,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 11,
+    "key": "o_pagador_de_promessas.720p.mp4",
+    "prediction": 3,
+    "views": 299,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 75,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 2,
+        "views": 20,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 49,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 12,
+    "key": "vidas_secas.720p.mp4",
+    "prediction": 2,
+    "views": 140,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 2,
+        "views": 25,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 60,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 1,
+        "views": 5,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 13,
+    "key": "terra_em_transe.720p.mp4",
+    "prediction": 1,
+    "views": 30,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 1,
+        "views": 3,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 1,
+        "views": 2,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 1,
+        "views": 4,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 14,
+    "key": "bacurau_trailer.720p.mp4",
+    "prediction": 5,
+    "views": 1800,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 4,
+        "views": 500,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 5,
+        "views": 700,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 5,
+        "views": 650,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 15,
+    "key": "aquarius_ep_01.720p.mp4",
+    "prediction": 3,
+    "views": 500,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 100,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 90,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 80,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 16,
+    "key": "aquarius_ep_02.720p.mp4",
+    "prediction": 3,
+    "views": 200,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 45,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 4,
+        "views": 160,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 2,
+        "views": 10,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 17,
+    "key": "o_auto_da_barca_ep_03.720p.mp4",
+    "prediction": 2,
+    "views": 60,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 2,
+        "views": 12,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 2,
+        "views": 9,
+        "isCached": true
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 2,
+        "views": 8,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 18,
+    "key": "tropicalia_doc.720p.mp4",
+    "prediction": 4,
+    "views": 400,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 2,
+        "views": 30,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 4,
+        "views": 220,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 65,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 19,
+    "key": "cine_marrocos_doc.720p.mp4",
+    "prediction": 1,
+    "views": 8,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 1,
+        "views": 1,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 1,
+        "views": 0,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 1,
+        "views": 2,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 20,
+    "key": "mangue_beat_ep_02.720p.mp4",
+    "prediction": 3,
+    "views": 305,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 4,
+        "views": 110,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 55,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 52,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 21,
+    "key": "samba_de_roda_ep_04.720p.mp4",
+    "prediction": 2,
+    "views": 75,
+    "storage": {
+      "name": "cold"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 50,
+        "isCached": false
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 2,
+        "views": 15,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 4,
+        "views": 90,
+        "isCached": false
+      }
+    ]
+  },
+  {
+    "videoid": 22,
+    "key": "noites_do_sertao.720p.mp4",
+    "prediction": 5,
+    "views": 2000,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 4,
+        "views": 600,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 4,
+        "views": 500,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 5,
+        "views": 900,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 23,
+    "key": "lavoura_arcaica_tr.720p.mp4",
+    "prediction": 4,
+    "views": 650,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 70,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 45,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 4,
+        "views": 210,
+        "isCached": true
+      }
+    ]
+  },
+  {
+    "videoid": 24,
+    "key": "o_som_ao_redor.720p.mp4",
+    "prediction": 3,
+    "views": 290,
+    "storage": {
+      "name": "hot"
+    },
+    "edgeNodes": [
+      {
+        "region": "eu-central-1",
+        "prediction": 3,
+        "views": 95,
+        "isCached": true
+      },
+      {
+        "region": "us-east-1",
+        "prediction": 3,
+        "views": 85,
+        "isCached": false
+      },
+      {
+        "region": "br-southeast-1",
+        "prediction": 3,
+        "views": 60,
+        "isCached": false
+      }
+    ]
+  }
+]
